@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Panel } from '../components/ui/Panel';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { TerminalLog } from '../components/terminal/TerminalLog';
@@ -18,6 +18,18 @@ export function LoadingScreen({ historyInfo, onForceRefresh }: LoadingScreenProp
     const { repoInput, fetchProgress, cancel } = useAppStore();
     const { logEntries, scrollRef } = useTerminalLog();
     const { owner, repo } = parseRepoInput(repoInput);
+    
+    // Track phase start time
+    const phaseStartTimeRef = useRef<number>(Date.now());
+    const lastPhaseRef = useRef<string>(fetchProgress.phase);
+    
+    // Update start time when phase changes
+    useEffect(() => {
+        if (lastPhaseRef.current !== fetchProgress.phase) {
+            phaseStartTimeRef.current = Date.now();
+            lastPhaseRef.current = fetchProgress.phase;
+        }
+    }, [fetchProgress.phase]);
 
     const phaseLabel = fetchProgress.phase === 'fetching'
         ? 'Fetching Issues'
@@ -85,6 +97,7 @@ export function LoadingScreen({ historyInfo, onForceRefresh }: LoadingScreenProp
                             current={fetchProgress.current}
                             total={fetchProgress.total}
                             label="Progress"
+                            startTime={phaseStartTimeRef.current}
                         />
 
                         {/* Log panel */}

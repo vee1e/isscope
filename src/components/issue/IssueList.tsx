@@ -125,7 +125,7 @@ export function IssueList({
                     justifyContent: 'space-between',
                 }}
             >
-                <span>╭─ Issues (ranked by doability) ─╮</span>
+                <span>[ Issues (ranked by doability) ]</span>
                 <span style={{ color: 'var(--text-dim)' }}>{filtered.length} items</span>
             </div>
 

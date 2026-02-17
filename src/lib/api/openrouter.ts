@@ -166,7 +166,7 @@ export async function analyzeAllIssues(
     isCancelled?: () => boolean
 ): Promise<Map<number, AnalysisResult>> {
     const analyses = new Map<number, AnalysisResult>();
-    const CONCURRENCY = 5;
+    const CONCURRENCY = 15;
     let completed = 0;
 
     // Chunk array into batches or use a pool. A pool is better for speed.

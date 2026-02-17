@@ -34,7 +34,7 @@ export function Panel({ title, children, style, className, headerRight }: PanelP
                         background: 'var(--bg-tertiary)',
                     }}
                 >
-                    <span>╭─ {title} ─╮</span>
+                    <span>[ {title} ]</span>
                     {headerRight}
                 </div>
             )}

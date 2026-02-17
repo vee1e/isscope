@@ -3,8 +3,9 @@ import { Button } from '../components/ui/Button';
 import { ScreenLayout } from '../components/layout/ScreenLayout';
 import { useAppStore } from '../store/appStore';
 import { validateRepoInput, parseRepoInput } from '../lib/utils/validators';
-import { Github, ArrowRight, Settings, Key, History, Clock, GitPullRequest } from 'lucide-react';
+import { Github, Settings, Key, History, Clock, GitPullRequest, Save, Check, Loader2 } from 'lucide-react';
 import { CONFIG } from '../lib/constants';
+import { historyService } from '../lib/history/historyService';
 
 function formatTimeAgo(timestamp: number): string {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -19,15 +20,55 @@ function formatTimeAgo(timestamp: number): string {
 
 interface InputScreenProps {
     onForceRefresh?: () => void;
+    onLoadFromHistory?: (owner: string, repo: string) => void;
 }
 
-export function InputScreen({ onForceRefresh }: InputScreenProps) {
-    const { repoInput, setRepoInput, isValidRepo, githubToken, openRouterKey, setApiKeys, history, isHistoryLoading, loadHistory, maxIssues, setMaxIssues } = useAppStore();
+// Storage keys for localStorage
+const STORAGE_KEY_GITHUB = 'isscope_github_token';
+const STORAGE_KEY_OPENROUTER = 'isscope_openrouter_key';
+const STORAGE_KEY_MAX_ISSUES = 'isscope_max_issues';
+
+export function InputScreen({ onForceRefresh, onLoadFromHistory }: InputScreenProps) {
+    const { repoInput, setRepoInput, isValidRepo, githubToken, openRouterKey, setApiKeys, history, isHistoryLoading, loadHistory, maxIssues, setMaxIssues, setIssues, setAnalyses, setScreen, addLog } = useAppStore();
     const [error, setError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [showConfig, setShowConfig] = useState(false);
+    const [isLoadingFromHistory, setIsLoadingFromHistory] = useState(false);
+    
+    // Local state for API key inputs
+    const [localGithubToken, setLocalGithubToken] = useState(githubToken);
+    const [localOpenRouterKey, setLocalOpenRouterKey] = useState(openRouterKey);
+    const [localMaxIssues, setLocalMaxIssues] = useState(maxIssues);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+    
     const inputRef = React.useRef<HTMLInputElement>(null);
+
+    // Load API keys from localStorage on mount
+    useEffect(() => {
+        const storedGithub = localStorage.getItem(STORAGE_KEY_GITHUB) || '';
+        const storedOpenRouter = localStorage.getItem(STORAGE_KEY_OPENROUTER) || '';
+        const storedMaxIssues = localStorage.getItem(STORAGE_KEY_MAX_ISSUES);
+        
+        if (storedGithub || storedOpenRouter) {
+            setApiKeys({ 
+                githubToken: storedGithub, 
+                openRouterKey: storedOpenRouter 
+            });
+        }
+        
+        if (storedMaxIssues) {
+            const parsed = parseInt(storedMaxIssues, 10);
+            if (!isNaN(parsed)) {
+                setMaxIssues(parsed);
+            }
+        }
+        
+        // Update local state
+        setLocalGithubToken(storedGithub);
+        setLocalOpenRouterKey(storedOpenRouter);
+        setLocalMaxIssues(storedMaxIssues ? parseInt(storedMaxIssues, 10) : CONFIG.DEFAULT_MAX_ISSUES);
+    }, [setApiKeys, setMaxIssues]);
 
     useEffect(() => {
         loadHistory();
@@ -66,7 +107,7 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
         }
 
         // Sanitize input to owner/repo format if it's a URL
-        const { owner, repo } = parseRepoInput(repoInput); // We know it's valid, but parse it to be safe
+        const { owner, repo } = parseRepoInput(repoInput);
         const cleanRepo = `${owner}/${repo}`;
         if (cleanRepo !== repoInput) {
             setRepoInput(cleanRepo);
@@ -75,6 +116,58 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
         setError(null);
         setSubmitted(true);
         useAppStore.getState().setScreen('fetching');
+    };
+
+    const handleSaveApiKeys = () => {
+        setSaveStatus('saving');
+        
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY_GITHUB, localGithubToken);
+        localStorage.setItem(STORAGE_KEY_OPENROUTER, localOpenRouterKey);
+        localStorage.setItem(STORAGE_KEY_MAX_ISSUES, localMaxIssues.toString());
+        
+        // Update store
+        setApiKeys({ 
+            githubToken: localGithubToken, 
+            openRouterKey: localOpenRouterKey 
+        });
+        setMaxIssues(localMaxIssues);
+        
+        // Show success state
+        setTimeout(() => {
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus('idle'), 2000);
+        }, 300);
+    };
+
+    const handleLoadFromHistory = async (key: string) => {
+        setIsLoadingFromHistory(true);
+        try {
+            const [owner, repo] = key.split('/');
+            const historyResult = await historyService.getHistoryEntry(owner, repo);
+            
+            if (historyResult.valid && historyResult.data) {
+                // Set the issues and analyses directly
+                setIssues(historyResult.data.issues);
+                setAnalyses(historyResult.data.analyses);
+                setRepoInput(key);
+                addLog(`Loaded ${historyResult.data.issues.length} issues from history`, 'success');
+                setScreen('report');
+            } else {
+                // Fall back to normal flow
+                setRepoInput(key);
+                setSubmitted(true);
+                setScreen('fetching');
+            }
+        } catch (error) {
+            console.error('Failed to load from history:', error);
+            // Fall back to normal flow
+            setRepoInput(key);
+            setSubmitted(true);
+            setScreen('fetching');
+        } finally {
+            setIsLoadingFromHistory(false);
+        }
     };
 
     const recentHistory = history.slice(0, 3);
@@ -178,7 +271,7 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             placeholder="owner/repo [Cmd+K]"
-                            disabled={submitted}
+                            disabled={submitted || isLoadingFromHistory}
                             style={{
                                 width: '100%',
                                 padding: '16px 16px 16px 48px',
@@ -222,23 +315,24 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
 
                     <Button
                         size="lg"
-                        disabled={!isValidRepo || submitted}
-                        loading={submitted}
+                        disabled={!isValidRepo || submitted || isLoadingFromHistory}
+                        loading={submitted || isLoadingFromHistory}
                         style={{
                             width: '100%',
                             padding: '14px',
                             fontSize: '15px',
                             fontWeight: 600,
-                            background: isValidRepo && !submitted ? 'var(--text)' : 'var(--bg-tertiary)',
-                            color: isValidRepo && !submitted ? 'var(--bg)' : 'var(--text-dim)',
+                            background: isValidRepo && !submitted && !isLoadingFromHistory ? 'var(--text)' : 'var(--bg-tertiary)',
+                            color: isValidRepo && !submitted && !isLoadingFromHistory ? 'var(--bg)' : 'var(--text-dim)',
                             border: 'none',
                             borderRadius: '12px',
-                            cursor: isValidRepo && !submitted ? 'pointer' : 'not-allowed',
-                            opacity: submitted ? 0.7 : 1,
+                            cursor: isValidRepo && !submitted && !isLoadingFromHistory ? 'pointer' : 'not-allowed',
+                            opacity: submitted || isLoadingFromHistory ? 0.7 : 1,
                         }}
                     >
-                        {submitted ? 'Analyzing Repository...' : 'Start Analysis'}
-                        {!submitted && <ArrowRight size={16} />}
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            {isLoadingFromHistory ? 'Loading from History...' : submitted ? 'Analyzing Repository...' : 'Start Analysis'}
+                        </span>
                     </Button>
 
                     {/* Quick History Access */}
@@ -258,7 +352,8 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                                     <button
                                         key={entry.key}
                                         type="button"
-                                        onClick={() => setRepoInput(entry.key)}
+                                        onClick={() => handleLoadFromHistory(entry.key)}
+                                        disabled={isLoadingFromHistory}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
@@ -267,13 +362,16 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                                             background: 'var(--bg-secondary)',
                                             border: '1px solid var(--border-subtle)',
                                             borderRadius: '8px',
-                                            cursor: 'pointer',
+                                            cursor: isLoadingFromHistory ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.15s ease',
                                             textAlign: 'left',
+                                            opacity: isLoadingFromHistory ? 0.6 : 1,
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = 'var(--bg-tertiary)';
-                                            e.currentTarget.style.borderColor = 'var(--border)';
+                                            if (!isLoadingFromHistory) {
+                                                e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                                e.currentTarget.style.borderColor = 'var(--border)';
+                                            }
                                         }}
                                         onMouseLeave={(e) => {
                                             e.currentTarget.style.background = 'var(--bg-secondary)';
@@ -376,8 +474,11 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                                     <div style={{ position: 'relative' }}>
                                         <input
                                             type="password"
-                                            value={githubToken}
-                                            onChange={(e) => setApiKeys({ githubToken: e.target.value })}
+                                            value={localGithubToken}
+                                            onChange={(e) => {
+                                                setLocalGithubToken(e.target.value);
+                                                setSaveStatus('idle');
+                                            }}
                                             placeholder="ghp_..."
                                             style={{
                                                 width: '100%',
@@ -402,8 +503,11 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                                     <div style={{ position: 'relative' }}>
                                         <input
                                             type="password"
-                                            value={openRouterKey}
-                                            onChange={(e) => setApiKeys({ openRouterKey: e.target.value })}
+                                            value={localOpenRouterKey}
+                                            onChange={(e) => {
+                                                setLocalOpenRouterKey(e.target.value);
+                                                setSaveStatus('idle');
+                                            }}
                                             placeholder="sk-or-..."
                                             style={{
                                                 width: '100%',
@@ -428,8 +532,11 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                                     <div style={{ position: 'relative' }}>
                                         <input
                                             type="number"
-                                            value={maxIssues}
-                                            onChange={(e) => setMaxIssues(parseInt(e.target.value, 10))}
+                                            value={localMaxIssues}
+                                            onChange={(e) => {
+                                                setLocalMaxIssues(parseInt(e.target.value, 10));
+                                                setSaveStatus('idle');
+                                            }}
                                             min={CONFIG.MIN_MAX_ISSUES}
                                             max={CONFIG.MAX_MAX_ISSUES}
                                             style={{
@@ -450,6 +557,34 @@ export function InputScreen({ onForceRefresh }: InputScreenProps) {
                                         Limits the number of issues fetched from GitHub. Lower values are faster.
                                     </div>
                                 </div>
+
+                                <Button
+                                    onClick={handleSaveApiKeys}
+                                    disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+                                    style={{
+                                        width: '100%',
+                                        marginTop: '8px',
+                                        background: saveStatus === 'saved' ? 'var(--status-success)' : 'var(--text)',
+                                        color: 'var(--bg)',
+                                    }}
+                                >
+                                    {saveStatus === 'saving' ? (
+                                        <>
+                                            <Loader2 size={14} style={{ marginRight: '6px', animation: 'spin 1s linear infinite' }} />
+                                            Saving...
+                                        </>
+                                    ) : saveStatus === 'saved' ? (
+                                        <>
+                                            <Check size={14} style={{ marginRight: '6px' }} />
+                                            Saved!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save size={14} style={{ marginRight: '6px' }} />
+                                            Save Configuration
+                                        </>
+                                    )}
+                                </Button>
                             </div>
                         )}
                     </div>

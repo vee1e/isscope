@@ -32,7 +32,7 @@ export function IssueDetail({ issue }: IssueDetailProps) {
                         background: 'var(--bg-tertiary)',
                     }}
                 >
-                    ╭─ Issue Detail ─╮
+                    [ Issue Detail ]
                 </div>
                 <div
                     style={{
@@ -77,7 +77,7 @@ export function IssueDetail({ issue }: IssueDetailProps) {
                     justifyContent: 'space-between',
                 }}
             >
-                <span>╭─ Issue Detail ─╮</span>
+                <span>[ Issue Detail ]</span>
                 <a
                     href={issue.html_url}
                     target="_blank"
