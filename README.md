@@ -1,4 +1,4 @@
-# IssueScope
+# IsScope
 
 IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to determine their implementation difficulty, required skills, and overall doability, helping contributors find the right issues to work on.
 
