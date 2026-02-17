@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import type { Issue, AnalysisResult, LogEntry, FetchProgress, AppScreen, LogType, RankedIssue } from '../lib/types';
+import type { Issue, AnalysisResult, LogEntry, FetchProgress, AppScreen, LogType, RankedIssue, HistoryMetadata } from '../lib/types';
+import { historyService } from '../lib/history/historyService';
+import { CONFIG } from '../lib/constants';
 
 function timestamp(): string {
     return new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -20,6 +22,10 @@ interface AppState {
     openRouterKey: string;
     setApiKeys: (keys: { githubToken?: string; openRouterKey?: string }) => void;
 
+    // Settings
+    maxIssues: number;
+    setMaxIssues: (max: number) => void;
+
     // Fetching Progress
     fetchProgress: FetchProgress;
     setFetchProgress: (progress: Partial<FetchProgress>) => void;
@@ -30,6 +36,7 @@ interface AppState {
     setIssues: (issues: Issue[]) => void;
     addIssue: (issue: Issue) => void;
     setAnalysis: (issueNumber: number, result: AnalysisResult) => void;
+    setAnalyses: (analyses: Map<number, AnalysisResult>) => void;
 
     // Ranked results
     getRankedIssues: () => RankedIssue[];
@@ -51,6 +58,13 @@ interface AppState {
 
     // Reset
     reset: () => void;
+
+    // History
+    history: Array<{ key: string; metadata: HistoryMetadata; fetchedAt: number }>;
+    isHistoryLoading: boolean;
+    loadHistory: () => Promise<void>;
+    deleteFromHistory: (owner: string, repo: string) => Promise<void>;
+    clearAllHistory: () => Promise<void>;
 }
 
 import { validateRepoInput } from '../lib/utils/validators';
@@ -94,6 +108,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             newAnalyses.set(issueNumber, result);
             return { analyses: newAnalyses };
         }),
+    setAnalyses: (analyses) => set({ analyses }),
 
     // Ranked results
     getRankedIssues: () => {
@@ -141,5 +156,35 @@ export const useAppStore = create<AppState>((set, get) => ({
             searchQuery: '',
             logEntries: [],
             isCancelled: false,
+            history: [],
+            isHistoryLoading: false,
         }),
+
+    // Settings
+    maxIssues: CONFIG.DEFAULT_MAX_ISSUES,
+    setMaxIssues: (max) => set({ maxIssues: Math.max(CONFIG.MIN_MAX_ISSUES, Math.min(CONFIG.MAX_MAX_ISSUES, max)) }),
+
+    // History
+    history: [],
+    isHistoryLoading: false,
+    loadHistory: async () => {
+        set({ isHistoryLoading: true });
+        try {
+            const repos = await historyService.getAllHistory();
+            set({ history: repos });
+        } catch (error) {
+            console.error('Failed to load history:', error);
+        } finally {
+            set({ isHistoryLoading: false });
+        }
+    },
+    deleteFromHistory: async (owner: string, repo: string) => {
+        await historyService.deleteFromHistory(owner, repo);
+        const repos = await historyService.getAllHistory();
+        set({ history: repos });
+    },
+    clearAllHistory: async () => {
+        await historyService.clearAllHistory();
+        set({ history: [] });
+    },
 }));

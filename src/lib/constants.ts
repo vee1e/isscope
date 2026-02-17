@@ -5,6 +5,9 @@ export const CONFIG = {
   MAX_CONCURRENT_REQUESTS: 5,
   RATE_LIMIT_BUFFER: 100,
   DEFAULT_PAGE_SIZE: 100,
+  DEFAULT_MAX_ISSUES: 200,
+  MIN_MAX_ISSUES: 10,
+  MAX_MAX_ISSUES: 1000,
 } as const;
 
 export const REPO_REGEX = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/;

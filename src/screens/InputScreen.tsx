@@ -1,17 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/Button';
 import { ScreenLayout } from '../components/layout/ScreenLayout';
 import { useAppStore } from '../store/appStore';
 import { validateRepoInput, parseRepoInput } from '../lib/utils/validators';
-import { Zap, Github, ArrowRight, Settings, Key } from 'lucide-react';
+import { Github, ArrowRight, Settings, Key, History, Clock, GitPullRequest } from 'lucide-react';
+import { CONFIG } from '../lib/constants';
 
-export function InputScreen() {
-    const { repoInput, setRepoInput, isValidRepo, githubToken, openRouterKey, setApiKeys } = useAppStore();
+function formatTimeAgo(timestamp: number): string {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+}
+
+interface InputScreenProps {
+    onForceRefresh?: () => void;
+}
+
+export function InputScreen({ onForceRefresh }: InputScreenProps) {
+    const { repoInput, setRepoInput, isValidRepo, githubToken, openRouterKey, setApiKeys, history, isHistoryLoading, loadHistory, maxIssues, setMaxIssues } = useAppStore();
     const [error, setError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [showConfig, setShowConfig] = useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        loadHistory();
+    }, [loadHistory]);
 
     React.useEffect(() => {
         const handleKv = (e: KeyboardEvent) => {
@@ -56,6 +76,8 @@ export function InputScreen() {
         setSubmitted(true);
         useAppStore.getState().setScreen('fetching');
     };
+
+    const recentHistory = history.slice(0, 3);
 
     return (
         <ScreenLayout centered>
@@ -219,6 +241,94 @@ export function InputScreen() {
                         {!submitted && <ArrowRight size={16} />}
                     </Button>
 
+                    {/* Quick History Access */}
+                    {!isHistoryLoading && recentHistory.length > 0 && (
+                        <div style={{ marginTop: '8px' }}>
+                            <div style={{ 
+                                fontSize: '11px', 
+                                color: 'var(--text-muted)', 
+                                marginBottom: '8px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                            }}>
+                                Recent
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {recentHistory.map((entry) => (
+                                    <button
+                                        key={entry.key}
+                                        type="button"
+                                        onClick={() => setRepoInput(entry.key)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '10px 12px',
+                                            background: 'var(--bg-secondary)',
+                                            border: '1px solid var(--border-subtle)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.15s ease',
+                                            textAlign: 'left',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                            e.currentTarget.style.borderColor = 'var(--border)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = 'var(--bg-secondary)';
+                                            e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                                        }}
+                                    >
+                                        <span style={{ 
+                                            fontSize: '13px', 
+                                            color: 'var(--text)',
+                                            fontFamily: 'var(--font-mono)',
+                                        }}>
+                                            {entry.key}
+                                        </span>
+                                        <span style={{ 
+                                            fontSize: '11px', 
+                                            color: 'var(--text-dim)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                        }}>
+                                            <Clock size={10} />
+                                            {formatTimeAgo(entry.fetchedAt)}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                        <button
+                            type="button"
+                            onClick={() => useAppStore.getState().setScreen('history')}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--text-dim)',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                margin: '0 auto',
+                                padding: '8px',
+                                borderRadius: '6px',
+                                transition: 'background 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                        >
+                            <History size={14} />
+                            View History ({history.length} repositories)
+                        </button>
+                    </div>
+
                     <div style={{ textAlign: 'center', marginTop: '16px' }}>
                         <button
                             type="button"
@@ -308,6 +418,36 @@ export function InputScreen() {
                                             }}
                                         />
                                         <Key size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                                        Max Issues to Parse ({CONFIG.MIN_MAX_ISSUES}-{CONFIG.MAX_MAX_ISSUES})
+                                    </label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="number"
+                                            value={maxIssues}
+                                            onChange={(e) => setMaxIssues(parseInt(e.target.value, 10))}
+                                            min={CONFIG.MIN_MAX_ISSUES}
+                                            max={CONFIG.MAX_MAX_ISSUES}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 10px 10px 36px',
+                                                fontSize: '13px',
+                                                background: 'var(--bg-tertiary)',
+                                                border: '1px solid var(--border-subtle)',
+                                                borderRadius: '8px',
+                                                color: 'var(--text)',
+                                                fontFamily: 'var(--font-mono)',
+                                                outline: 'none',
+                                            }}
+                                        />
+                                        <GitPullRequest size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '4px' }}>
+                                        Limits the number of issues fetched from GitHub. Lower values are faster.
                                     </div>
                                 </div>
                             </div>

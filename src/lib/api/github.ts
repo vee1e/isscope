@@ -85,6 +85,7 @@ async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
 export async function searchIssues(
     owner: string,
     repo: string,
+    maxIssues: number,
     onProgress?: (message: string) => void
 ): Promise<Issue[]> {
     const allIssues: Issue[] = [];
@@ -93,7 +94,7 @@ export async function searchIssues(
 
     onProgress?.(`Searching issues in ${owner}/${repo}...`);
 
-    while (hasMore) {
+    while (hasMore && allIssues.length < maxIssues) {
         const query = encodeURIComponent(`repo:${owner}/${repo} is:issue state:open -linked:pr`);
         const url = `${CONFIG.GITHUB_API_BASE}/search/issues?q=${query}&per_page=${CONFIG.DEFAULT_PAGE_SIZE}&page=${page}&sort=comments&order=asc`;
 
@@ -117,13 +118,20 @@ export async function searchIssues(
             }));
 
         allIssues.push(...issues);
-        onProgress?.(`Fetched page ${page}: ${allIssues.length}/${data.total_count} issues (rate limit: ${rateLimitInfo.remaining})`);
+        onProgress?.(`Fetched page ${page}: ${allIssues.length}/${Math.min(data.total_count, maxIssues)} issues (rate limit: ${rateLimitInfo.remaining})`);
 
-        hasMore = allIssues.length < data.total_count && issues.length > 0;
+        hasMore = allIssues.length < data.total_count && issues.length > 0 && allIssues.length < maxIssues;
         page++;
     }
 
-    return allIssues;
+    // Limit to max issues
+    const limitedIssues = allIssues.slice(0, maxIssues);
+    
+    if (allIssues.length > maxIssues) {
+        onProgress?.(`Limited to ${maxIssues} issues (found ${allIssues.length} total)`);
+    }
+
+    return limitedIssues;
 }
 
 export async function fetchIssueComments(

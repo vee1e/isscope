@@ -76,7 +76,7 @@ export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 
 // ── UI State Types ────────────────────────────────
 
-export type AppScreen = 'input' | 'fetching' | 'analyzing' | 'report';
+export type AppScreen = 'input' | 'fetching' | 'analyzing' | 'report' | 'history';
 
 export type LogType = 'info' | 'success' | 'warning' | 'error';
 
@@ -95,6 +95,41 @@ export interface FetchProgress {
 export interface RankedIssue extends Issue {
     analysis?: AnalysisResult;
     score: number;
+}
+
+// ── History Types ───────────────────────────────────
+
+export interface HistoryMetadata {
+    owner: string;
+    repo: string;
+    lastFetched: number;
+    issueCount: number;
+    // Activity tracking for dynamic expiration
+    issuesActivity: {
+        newIssuesPerDay: number;
+        lastIssueCreatedAt: string;
+        sampleSize: number;
+    };
+    commentsActivity: {
+        newCommentsPerDay: number;
+        lastCommentCreatedAt: string;
+        sampleSize: number;
+    };
+}
+
+export interface HistoryEntry {
+    key: string;
+    issues: Issue[];
+    analyses: Map<number, AnalysisResult>;
+    metadata: HistoryMetadata;
+    fetchedAt: number;
+}
+
+export interface HistoryCheckResult {
+    valid: boolean;
+    data?: HistoryEntry;
+    isStale?: boolean;
+    reason?: string;
 }
 
 // ── Utility ───────────────────────────────────────

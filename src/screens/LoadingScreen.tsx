@@ -7,9 +7,14 @@ import { ScreenLayout } from '../components/layout/ScreenLayout';
 import { useAppStore } from '../store/appStore';
 import { useTerminalLog } from '../hooks/useTerminalLog';
 import { parseRepoInput } from '../lib/utils/validators';
-import { XCircle } from 'lucide-react';
+import { XCircle, RefreshCw, Database } from 'lucide-react';
 
-export function LoadingScreen() {
+interface LoadingScreenProps {
+    historyInfo?: { fromHistory: boolean; issueCount: number; fetchedAt: Date } | null;
+    onForceRefresh?: () => void;
+}
+
+export function LoadingScreen({ historyInfo, onForceRefresh }: LoadingScreenProps) {
     const { repoInput, fetchProgress, cancel } = useAppStore();
     const { logEntries, scrollRef } = useTerminalLog();
     const { owner, repo } = parseRepoInput(repoInput);
@@ -58,6 +63,21 @@ export function LoadingScreen() {
                                     {phaseLabel}
                                 </span>
                             </div>
+                            {historyInfo?.fromHistory && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>Source: </span>
+                                    <span style={{ 
+                                        color: 'var(--status-success)', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '4px',
+                                        fontSize: '11px',
+                                    }}>
+                                        <Database size={10} />
+                                        From History ({historyInfo.issueCount} issues)
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Progress bar */}
@@ -72,20 +92,34 @@ export function LoadingScreen() {
                             <TerminalLog entries={logEntries} maxHeight="280px" scrollRef={scrollRef} />
                         </div>
 
-                        {/* Cancel button */}
-                        <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={() => {
-                                    cancel();
-                                    useAppStore.getState().setScreen('input');
-                                    useAppStore.getState().addLog('Operation cancelled by user.', 'warning');
-                                }}
-                            >
-                                <XCircle size={13} />
-                                Cancel
-                            </Button>
+                        {/* Action buttons */}
+                        <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between' }}>
+                            {historyInfo?.fromHistory && onForceRefresh && fetchProgress.phase === 'fetching' && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        onForceRefresh();
+                                    }}
+                                >
+                                    <RefreshCw size={13} />
+                                    Refresh Data
+                                </Button>
+                            )}
+                            <div style={{ marginLeft: 'auto' }}>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => {
+                                        cancel();
+                                        useAppStore.getState().setScreen('input');
+                                        useAppStore.getState().addLog('Operation cancelled by user.', 'warning');
+                                    }}
+                                >
+                                    <XCircle size={13} />
+                                    Cancel
+                                </Button>
+                            </div>
                         </div>
                     </Panel>
                 </div>
