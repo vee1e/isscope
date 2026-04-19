@@ -20,7 +20,8 @@ When creating a Pull Request (PR), please follow these guidelines:
 - Provide a summary of the changes you made in the PR description.
 - Explain **why** the change was made, not just what was changed.
 - If your PR fixes an open issue, include `Fixes #ISSUE_NUMBER` in the description.
-- **Include before/after screenshots if your changes affect the UI.**
+- Include before/after screenshots if your changes affect the UI.
+- **Any PRs that do not follow the above guidelines has the right to be closed by maintainers.**
 
 ## Commit Message Conventions
 
