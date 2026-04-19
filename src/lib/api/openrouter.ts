@@ -153,7 +153,7 @@ export async function analyzeIssue(
       );
       return result;
     } catch (err: unknown) {
-      const error = err as Error;
+      const error = err instanceof Error ? err : new Error(String(err));
       if (error.message === 'RATE_LIMITED' && retries > 1) {
         onLog?.(`⏳ Rate limited. Waiting ${backoff / 1000}s before retry...`);
         await new Promise((r) => setTimeout(r, backoff));

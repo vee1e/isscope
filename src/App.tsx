@@ -34,7 +34,8 @@ function App() {
 
         await analyzeIssues(fetchedIssues);
       } catch (err: unknown) {
-        addLog(`Fatal error: ${(err as Error).message || String(err)}`, 'error');
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        addLog(`Fatal error: ${errorMessage}`, 'error');
       }
     },
     [fetchIssues, analyzeIssues, analyses, addLog, setScreen],

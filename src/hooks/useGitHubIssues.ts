@@ -19,7 +19,6 @@ export function useGitHubIssues() {
     maxIssues,
   } = useAppStore();
   const cancelRef = useRef(false);
-  const [isUsingHistory, setIsUsingHistory] = useState(false);
   const [historyInfo, setHistoryInfo] = useState<{
     fromHistory: boolean;
     issueCount: number;
@@ -35,7 +34,6 @@ export function useGitHubIssues() {
     async (forceRefresh = false) => {
       const { owner, repo } = parseRepoInput(repoInput);
       cancelRef.current = false;
-      setIsUsingHistory(false);
       setHistoryInfo(null);
 
       setScreen('fetching');
@@ -76,13 +74,6 @@ export function useGitHubIssues() {
               setAnalyses(new Map(historyAnalyses));
               addLog(`✓ Restored ${historyAnalyses.size} analyses from history`, 'success');
             }
-
-            setIsUsingHistory(true);
-            setHistoryInfo({
-              fromHistory: true,
-              issueCount: historyResult.historyData.issues.length,
-              fetchedAt: new Date(historyResult.historyData.fetchedAt),
-            });
 
             // Refresh history list
             await loadHistory();
@@ -135,7 +126,8 @@ export function useGitHubIssues() {
 
         return detailedIssues;
       } catch (err: unknown) {
-        addLog(`✗ Error: ${(err as Error).message || String(err)}`, 'error');
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        addLog(`✗ Error: ${errorMessage}`, 'error');
         throw err;
       }
     },
@@ -156,5 +148,5 @@ export function useGitHubIssues() {
     cancelRef.current = true;
   }, []);
 
-  return { fetchIssues, cancel, isCancelled, isUsingHistory, historyInfo };
+  return { fetchIssues, cancel, isCancelled, historyInfo };
 }
