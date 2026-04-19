@@ -134,8 +134,8 @@ export function useGitHubIssues() {
         });
 
         return detailedIssues;
-      } catch (err: any) {
-        addLog(`✗ Error: ${err.message}`, 'error');
+      } catch (err: unknown) {
+        addLog(`✗ Error: ${(err as Error).message || String(err)}`, 'error');
         throw err;
       }
     },

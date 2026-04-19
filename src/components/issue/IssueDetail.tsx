@@ -1,4 +1,5 @@
 import React from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ScrollArea } from '../ui/ScrollArea';
 import { IssueMetadata } from './IssueMetadata';
 import { ExternalLink, MessageSquare, Calendar, User } from 'lucide-react';

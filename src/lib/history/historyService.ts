@@ -110,7 +110,7 @@ class HistoryService {
   private shouldUseHistoryIssues(historyEntry: HistoryEntry, freshIssues: Issue[]): boolean {
     const now = Date.now();
     const age = now - historyEntry.fetchedAt;
-    const { issuesActivity, commentsActivity } = historyEntry.metadata;
+    const { issuesActivity } = historyEntry.metadata;
 
     // Calculate expected new issues since history was saved
     const daysSinceHistory = age / (1000 * 60 * 60 * 24);
@@ -327,7 +327,6 @@ class HistoryService {
     analyses: Map<number, AnalysisResult>,
   ): Promise<void> {
     await this.init();
-    const key = `${owner}/${repo}`;
 
     const entry = await this.getHistoryEntry(owner, repo);
     if (!entry.valid || !entry.data) {
