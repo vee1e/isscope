@@ -1,5 +1,4 @@
 import React from 'react';
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ScrollArea } from '../ui/ScrollArea';
 import { IssueMetadata } from './IssueMetadata';
 import { ExternalLink, MessageSquare, Calendar, User } from 'lucide-react';
@@ -277,44 +276,62 @@ export function IssueDetail({ issue }: IssueDetailProps) {
                     <ReactMarkdown
                       rehypePlugins={[rehypeRaw]}
                       components={{
-                        img: ({ node, ...props }) => (
-                          <img
-                            {...props}
-                            style={{
-                              maxWidth: '100%',
-                              borderRadius: '4px',
-                              border: '1px solid var(--border-subtle)',
-                            }}
-                          />
-                        ),
-                        a: ({ node, ...props }) => (
-                          <a
-                            {...props}
-                            style={{ color: 'var(--text)', textDecoration: 'underline' }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          />
-                        ),
-                        p: ({ node, ...props }) => (
-                          <p {...props} style={{ marginTop: '0.5em', marginBottom: '0.5em' }} />
-                        ),
-                        pre: ({ node, ...props }) => (
-                          <pre
-                            {...props}
-                            style={{
-                              background: 'var(--bg-secondary)',
-                              padding: '8px',
-                              borderRadius: '4px',
-                              overflowX: 'auto',
-                            }}
-                          />
-                        ),
-                        code: ({ node, ...props }) => (
-                          <code
-                            {...props}
-                            style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}
-                          />
-                        ),
+                        img: ({ ...props }) => {
+                          const p = { ...props } as Record<string, unknown>;
+                          delete p.node;
+                          return (
+                            <img
+                              {...p}
+                              style={{
+                                maxWidth: '100%',
+                                borderRadius: '4px',
+                                border: '1px solid var(--border-subtle)',
+                              }}
+                            />
+                          );
+                        },
+                        a: ({ ...props }) => {
+                          const p = { ...props } as Record<string, unknown>;
+                          delete p.node;
+                          return (
+                            <a
+                              {...p}
+                              style={{ color: 'var(--text)', textDecoration: 'underline' }}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          );
+                        },
+                        p: ({ ...props }) => {
+                          const p = { ...props } as Record<string, unknown>;
+                          delete p.node;
+                          return <p {...p} style={{ marginTop: '0.5em', marginBottom: '0.5em' }} />;
+                        },
+                        pre: ({ ...props }) => {
+                          const p = { ...props } as Record<string, unknown>;
+                          delete p.node;
+                          return (
+                            <pre
+                              {...p}
+                              style={{
+                                background: 'var(--bg-secondary)',
+                                padding: '8px',
+                                borderRadius: '4px',
+                                overflowX: 'auto',
+                              }}
+                            />
+                          );
+                        },
+                        code: ({ ...props }) => {
+                          const p = { ...props } as Record<string, unknown>;
+                          delete p.node;
+                          return (
+                            <code
+                              {...p}
+                              style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}
+                            />
+                          );
+                        },
                       }}
                     >
                       {comment.body}
@@ -350,44 +367,59 @@ export function IssueDetail({ issue }: IssueDetailProps) {
                 <ReactMarkdown
                   rehypePlugins={[rehypeRaw]}
                   components={{
-                    img: ({ node, ...props }) => (
-                      <img
-                        {...props}
-                        style={{
-                          maxWidth: '100%',
-                          borderRadius: '4px',
-                          border: '1px solid var(--border-subtle)',
-                        }}
-                      />
-                    ),
-                    a: ({ node, ...props }) => (
-                      <a
-                        {...props}
-                        style={{ color: 'var(--text)', textDecoration: 'underline' }}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      />
-                    ),
-                    p: ({ node, ...props }) => (
-                      <p {...props} style={{ marginTop: '0.5em', marginBottom: '0.5em' }} />
-                    ),
-                    pre: ({ node, ...props }) => (
-                      <pre
-                        {...props}
-                        style={{
-                          background: 'var(--bg-secondary)',
-                          padding: '8px',
-                          borderRadius: '4px',
-                          overflowX: 'auto',
-                        }}
-                      />
-                    ),
-                    code: ({ node, ...props }) => (
-                      <code
-                        {...props}
-                        style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}
-                      />
-                    ),
+                    img: ({ ...props }) => {
+                      const p = { ...props } as Record<string, unknown>;
+                      delete p.node;
+                      return (
+                        <img
+                          {...p}
+                          style={{
+                            maxWidth: '100%',
+                            borderRadius: '4px',
+                            border: '1px solid var(--border-subtle)',
+                          }}
+                        />
+                      );
+                    },
+                    a: ({ ...props }) => {
+                      const p = { ...props } as Record<string, unknown>;
+                      delete p.node;
+                      return (
+                        <a
+                          {...p}
+                          style={{ color: 'var(--text)', textDecoration: 'underline' }}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      );
+                    },
+                    p: ({ ...props }) => {
+                      const p = { ...props } as Record<string, unknown>;
+                      delete p.node;
+                      return <p {...p} style={{ marginTop: '0.5em', marginBottom: '0.5em' }} />;
+                    },
+                    pre: ({ ...props }) => {
+                      const p = { ...props } as Record<string, unknown>;
+                      delete p.node;
+                      return (
+                        <pre
+                          {...p}
+                          style={{
+                            background: 'var(--bg-secondary)',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            overflowX: 'auto',
+                          }}
+                        />
+                      );
+                    },
+                    code: ({ ...props }) => {
+                      const p = { ...props } as Record<string, unknown>;
+                      delete p.node;
+                      return (
+                        <code {...p} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }} />
+                      );
+                    },
                   }}
                 >
                   {issue.body}
