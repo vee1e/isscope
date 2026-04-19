@@ -1,5 +1,8 @@
 # Contributing to IssueScope
 
+> [!IMPORTANT]
+> Please ensure you read our [AI Usage Guidelines](#ai-usage-guidelines) before submitting a Pull Request. We require full disclosure of any AI tools used and maintain a strict policy against AI-generated "slop" PRs.
+
 Thank you for your interest in contributing to IssueScope! We welcome contributions from everyone. By participating in this project, you help make it better for the community.
 
 ## Community Trust System (Vouch)
