@@ -49,6 +49,15 @@ Before submitting a PR, ensure that your code passes all automated checks:
 - Keep components small and focused on a single responsibility.
 - Write comments explaining complex or non-obvious logic.
 
+### Pre-commit Hooks
+
+This project uses **Husky** and **lint-staged** to automatically lint and format your code before every commit. When you run `git commit`, it will automatically:
+
+1. Run `eslint --fix` on all staged `.ts` and `.tsx` files.
+2. Run `prettier --write` on all staged code, markup, and stylesheet files.
+
+You don't have to worry about formatting manually—just ensure you don't bypass the hooks (e.g., avoid using the `--no-verify` flag).
+
 ## Typical Review Timeline
 
 We aim to review Pull Requests within **3-5 business days**.
