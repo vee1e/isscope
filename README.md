@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/github/last-commit/vee1e/isscope?style=for-the-badge" />
  </p></div>
 
-![IssueScope](https://socialify.git.ci/vee1e/isscope/image?description=1&descriptionEditable=Webstore%20of%20photorealistic%20%0A3D%20digital%20objects%20in%20AR%20&font=Source%20Code%20Pro&forks=1&issues=1&name=1&owner=1&pattern=Floating%20Cogs&pulls=1&stargazers=1&theme=Dark)
+![IssueScope](https://socialify.git.ci/vee1e/isscope/image?description=1&descriptionEditable=AI%20Powered%20GitHub%20Issue%20Triager&font=Source%20Code%20Pro&forks=1&issues=1&name=1&owner=1&pattern=Floating%20Cogs&pulls=1&stargazers=1&theme=Dark)
 
 **Project Purpose:** IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to determine their implementation difficulty, required skills, and overall doability, helping contributors find the right issues to work on.
 
