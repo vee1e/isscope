@@ -149,12 +149,12 @@ export async function fetchIssueComments(
   const data = await response.json();
 
   return data.map(
-    (c: any): Comment => ({
-      id: c.id,
-      user: c.user,
-      body: c.body,
-      created_at: c.created_at,
-      updated_at: c.updated_at,
+    (c: Record<string, unknown>): Comment => ({
+      id: c.id as number,
+      user: c.user as Comment['user'],
+      body: c.body as string,
+      created_at: c.created_at as string,
+      updated_at: c.updated_at as string,
     }),
   );
 }
@@ -177,15 +177,15 @@ export async function fetchIssueTimeline(
 
     if (!response.ok) return [];
 
-    const data = await response.json();
+    const data: Record<string, unknown>[] = await response.json();
     return data.map(
-      (e: any): TimelineEvent => ({
-        event: e.event,
-        created_at: e.created_at,
-        actor: e.actor,
-        source: e.source,
-        commit_id: e.commit_id,
-        label: e.label,
+      (e): TimelineEvent => ({
+        event: e.event as string,
+        created_at: e.created_at as string,
+        actor: e.actor as TimelineEvent['actor'],
+        source: e.source as TimelineEvent['source'],
+        commit_id: e.commit_id as string | undefined,
+        label: e.label as TimelineEvent['label'],
       }),
     );
   } catch {
@@ -218,7 +218,6 @@ export async function fetchAllIssueDetails(
   onProgress?: (current: number, total: number, message: string) => void,
   isCancelled?: () => boolean,
 ): Promise<Issue[]> {
-  const results: Issue[] = [];
   // Increase concurrency for fetching details as these are lighter requests usually
   const CONCURRENCY = 10;
 
@@ -243,7 +242,7 @@ export async function fetchAllIssueDetails(
     if (!issue) return;
 
     try {
-      const detailed = await fetchIssueDetails(owner, repo, issue, (msg) => {
+      const detailed = await fetchIssueDetails(owner, repo, issue, () => {
         // Determine completion
         // We don't want to spam progress for every sub-step of every issue in parallel
         // onProgress?.(completed, issues.length, msg);
@@ -258,7 +257,7 @@ export async function fetchAllIssueDetails(
           `Fetched details for ${completed}/${issues.length} issues`,
         );
       }
-    } catch (e) {
+    } catch {
       // If fail, push original issue?
       resultsMap.set(issue.number, issue);
       completed++;

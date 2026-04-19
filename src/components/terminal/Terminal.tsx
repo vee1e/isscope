@@ -6,7 +6,7 @@ interface TerminalProps {
   style?: React.CSSProperties;
 }
 
-export function Terminal({ title = 'Terminal', children, style }: TerminalProps) {
+export function Terminal({ children, style }: TerminalProps) {
   return (
     <div
       style={{

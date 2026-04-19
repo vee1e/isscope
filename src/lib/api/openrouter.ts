@@ -152,16 +152,17 @@ export async function analyzeIssue(
         `✓ #${issue.number} analyzed — score: ${result.doability_score}/100, status: ${result.status}`,
       );
       return result;
-    } catch (err: any) {
-      if (err.message === 'RATE_LIMITED' && retries > 1) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (error.message === 'RATE_LIMITED' && retries > 1) {
         onLog?.(`⏳ Rate limited. Waiting ${backoff / 1000}s before retry...`);
         await new Promise((r) => setTimeout(r, backoff));
         backoff *= 2;
         retries--;
         continue;
       }
-      onLog?.(`✗ Failed to analyze #${issue.number}: ${err.message}`);
-      return { ...DEFAULT_ANALYSIS, analysis_notes: `Error: ${err.message}` };
+      onLog?.(`✗ Failed to analyze #${issue.number}: ${error.message}`);
+      return { ...DEFAULT_ANALYSIS, analysis_notes: `Error: ${error.message}` };
     }
   }
 
@@ -181,7 +182,6 @@ export async function analyzeAllIssues(
   // Chunk array into batches or use a pool. A pool is better for speed.
   // Simple pool implementation:
   const queue = [...issues];
-  const activeWorkers = new Set<Promise<void>>();
 
   const next = async (): Promise<void> => {
     if (isCancelled?.() || queue.length === 0) return;

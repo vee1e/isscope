@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Panel } from '../components/ui/Panel';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { TerminalLog } from '../components/terminal/TerminalLog';

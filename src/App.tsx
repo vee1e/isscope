@@ -9,7 +9,7 @@ import { useIssueAnalysis } from './hooks/useIssueAnalysis';
 
 function App() {
   const { currentScreen, issues, analyses, setScreen, addLog } = useAppStore();
-  const { fetchIssues, isUsingHistory, historyInfo } = useGitHubIssues();
+  const { fetchIssues, historyInfo } = useGitHubIssues();
   const { analyzeIssues } = useIssueAnalysis();
 
   const startAnalysis = useCallback(
@@ -33,8 +33,9 @@ function App() {
         }
 
         await analyzeIssues(fetchedIssues);
-      } catch (err: any) {
-        addLog(`Fatal error: ${err.message}`, 'error');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        addLog(`Fatal error: ${errorMessage}`, 'error');
       }
     },
     [fetchIssues, analyzeIssues, analyses, addLog, setScreen],
@@ -59,7 +60,7 @@ function App() {
       }}
     >
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {currentScreen === 'input' && <InputScreen onForceRefresh={() => startAnalysis(true)} />}
+        {currentScreen === 'input' && <InputScreen />}
         {(currentScreen === 'fetching' || currentScreen === 'analyzing') && (
           <LoadingScreen historyInfo={historyInfo} onForceRefresh={() => startAnalysis(true)} />
         )}

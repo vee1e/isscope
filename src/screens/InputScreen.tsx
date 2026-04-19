@@ -28,17 +28,12 @@ function formatTimeAgo(timestamp: number): string {
   return `${days}d ago`;
 }
 
-interface InputScreenProps {
-  onForceRefresh?: () => void;
-  onLoadFromHistory?: (owner: string, repo: string) => void;
-}
-
 // Storage keys for localStorage
 const STORAGE_KEY_GITHUB = 'isscope_github_token';
 const STORAGE_KEY_OPENROUTER = 'isscope_openrouter_key';
 const STORAGE_KEY_MAX_ISSUES = 'isscope_max_issues';
 
-export function InputScreen({ onForceRefresh, onLoadFromHistory }: InputScreenProps) {
+export function InputScreen() {
   const {
     repoInput,
     setRepoInput,

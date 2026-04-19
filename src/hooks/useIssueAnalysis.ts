@@ -90,7 +90,7 @@ export function useIssueAnalysis() {
       try {
         await historyService.updateHistoryAnalyses(owner, repo, analyses);
         addLog('✓ Analyses saved to history', 'success');
-      } catch (error) {
+      } catch {
         addLog('Warning: Failed to save analyses to history', 'warning');
       }
 

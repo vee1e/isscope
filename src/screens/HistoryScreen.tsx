@@ -14,7 +14,6 @@ import {
   GitBranch,
   Search,
 } from 'lucide-react';
-import type { HistoryMetadata } from '../lib/types';
 
 function formatTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
