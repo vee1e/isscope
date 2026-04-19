@@ -60,6 +60,7 @@ export function TerminalInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
+          aria-label="Terminal input"
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-base)',
