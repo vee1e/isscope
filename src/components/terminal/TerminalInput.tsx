@@ -60,11 +60,6 @@ export function TerminalInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
-          aria-label={placeholder || "Terminal input"}
-          spellCheck={false}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="none"
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-base)',
