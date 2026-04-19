@@ -2,6 +2,13 @@
 
 Thank you for your interest in contributing to IssueScope! We welcome contributions from everyone. By participating in this project, you help make it better for the community.
 
+## Community Trust System (Vouch)
+
+This project uses a community trust system called **Vouch**. To protect the repository from spam and low-quality automated submissions, contributors must be **vouched for** before their pull requests or issues can be fully accepted.
+
+- **New Contributors:** When you open your first issue or pull request, a maintainer will review it. If it meets our quality standards, they will vouch for you, allowing you to contribute freely moving forward.
+- **Maintainers:** Can vouch for a user by commenting `vouch @username` or denounce a bad actor by commenting `denounce @username` on an issue or PR.
+
 ## Pull Request Format and Description Requirements
 
 When creating a Pull Request (PR), please follow these guidelines:
