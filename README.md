@@ -2,7 +2,7 @@
 
 **Project Purpose:** IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to determine their implementation difficulty, required skills, and overall doability, helping contributors find the right issues to work on.
 
-<img width="2926" height="1818" alt="image" src="https://github.com/user-attachments/assets/80342f95-ad14-4351-a6e5-cd50f2ff5763" />
+<img alt="image" src="https://github.com/user-attachments/assets/80342f95-ad14-4351-a6e5-cd50f2ff5763" />
 
 ## Tech Stack
 
