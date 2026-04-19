@@ -17,7 +17,7 @@ When creating a Pull Request (PR), please follow these guidelines:
 - Provide a summary of the changes you made in the PR description.
 - Explain **why** the change was made, not just what was changed.
 - If your PR fixes an open issue, include `Fixes #ISSUE_NUMBER` in the description.
-- Include before/after screenshots if your changes affect the UI.
+- **Include before/after screenshots if your changes affect the UI.**
 
 ## Commit Message Conventions
 
@@ -63,12 +63,19 @@ This project uses **Husky** and **lint-staged** to automatically lint and format
 1. Run `eslint --fix` on all staged `.ts` and `.tsx` files.
 2. Run `prettier --write` on all staged code, markup, and stylesheet files.
 
-You don't have to worry about formatting manually—just ensure you don't bypass the hooks (e.g., avoid using the `--no-verify` flag).
+You don't have to worry about formatting manually, just ensure you don't bypass the hooks (e.g., avoid using the `--no-verify` flag).
+
+## AI Usage Guidelines
+
+We welcome the use of AI tools to assist with development, but we require transparency and quality:
+
+- **Disclosure:** AI usage is allowed, but you must disclose exactly what model and tool was used (e.g., Claude Code, opencode, etc.) in your PR description.
+- **No "Slop":** Do not make "slop" changes. For example, submitting a 10,000+ line refactor when the commit message just says "Update readme" is unacceptable. Ensure your changes are focused, well-tested, and accurately described.
+- **Maintainer Discretion:** If maintainers feel a PR is slop, we reserve the right to fully close it without review.
 
 ## Typical Review Timeline
 
-We aim to review Pull Requests within **3-5 business days**.
+We aim to review Pull Requests within **1-3 business days**.
 
 - If we require changes, the timeline resets after you push the requested updates.
 - Please be patient! We will get to your PR as soon as possible.
-- If a week goes by without any activity, feel free to politely ping the maintainers in the PR comments.
