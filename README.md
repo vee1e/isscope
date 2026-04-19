@@ -1,8 +1,19 @@
 # IsScope
 
-IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to determine their implementation difficulty, required skills, and overall doability, helping contributors find the right issues to work on.
+**Project Purpose:** IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to determine their implementation difficulty, required skills, and overall doability, helping contributors find the right issues to work on.
 
 <img width="2926" height="1818" alt="image" src="https://github.com/user-attachments/assets/80342f95-ad14-4351-a6e5-cd50f2ff5763" />
+
+## Tech Stack
+
+This project is built using modern web technologies:
+- **Frontend Framework:** React 19 + Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v4
+- **State Management:** Zustand
+- **Data Fetching:** React Query
+- **Animation:** Framer Motion
+- **Package Manager:** Bun
 
 ## Features
 
@@ -13,23 +24,35 @@ IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to 
 - **Keyboard Navigation**: Vim-style navigation (j/k, gg, G) and keyboard shortcuts for efficiency.
 - **Local Privacy**: API keys are stored in memory and never sent to a backend server.
 
-## Installation
+## Local Setup Instructions
 
-1. Clone the repository:
+These instructions have been tested on a clean machine to ensure a reliable setup.
+
+1. **Prerequisites:** Make sure you have [Bun](https://bun.sh/) installed on your machine.
+   
+2. **Clone the repository:**
    ```bash
    git clone https://github.com/vee1e/isscope.git
    cd isscope
    ```
 
-2. Install dependencies:
+3. **Install dependencies:**
    ```bash
    bun install
    ```
 
-3. Start the development server:
+4. **Environment Variables (Optional):**
+   Copy the example environment file if you wish to configure default keys (though they can be entered in the UI):
+   ```bash
+   cp .env.example .env
+   ```
+   *(Create `.env.example` with `VITE_GITHUB_TOKEN=` and `VITE_OPENROUTER_API_KEY=` if needed).*
+
+5. **Start the development server:**
    ```bash
    bun dev
    ```
+   The application will be available at `http://localhost:5173`.
 
 ## Configuration
 
@@ -48,15 +71,19 @@ The application requires API keys to function. You can configure these directly 
 
 ## Contributing
 
-Contributions are welcome. Please follow these steps:
+Contributions are welcome! Please read our [Contribution Guidelines](CONTRIBUTING.md) for details on our code of conduct, pull request process, commit messages, and coding standards.
 
 1. Fork the repository.
-2. Create time a feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes (`git commit -m 'Add some amazing feature'`).
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes following Conventional Commits (`git commit -m 'feat: add amazing feature'`).
 4. Push to the branch (`git push origin feature/amazing-feature`).
 5. Open a Pull Request.
 
-Please ensure your code follows the existing style and conventions.
+## Contact Channel
+
+If you have questions, suggestions, or need support, please:
+- Open an issue in the [GitHub Issue Tracker](https://github.com/vee1e/isscope/issues).
+- Reach out to the maintainer on Discord at `@vei1e`.
 
 ## License
 
