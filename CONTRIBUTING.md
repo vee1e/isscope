@@ -1,7 +1,7 @@
 # Contributing to IssueScope
 
 > [!IMPORTANT]
-> Please ensure you read our [AI Usage Guidelines](#ai-usage-guidelines) before submitting a Pull Request. We require full disclosure of any AI tools used and maintain a strict policy against AI-generated "slop" PRs.
+> Please ensure you read our [AI Usage Guidelines](#ai-usage-guidelines) before submitting a Pull Request.
 
 Thank you for your interest in contributing to IssueScope! We welcome contributions from everyone. By participating in this project, you help make it better for the community.
 
@@ -73,7 +73,7 @@ You don't have to worry about formatting manually, just ensure you don't bypass 
 We welcome the use of AI tools to assist with development, but we require transparency and quality:
 
 - **Disclosure:** AI usage is allowed, but you must disclose exactly what model and tool was used (e.g., Claude Code, opencode, etc.) in your PR description.
-- **No "Slop":** Do not make "slop" changes. For example, submitting a 10,000+ line refactor when the commit message just says "Update readme" is unacceptable. Ensure your changes are focused, well-tested, and accurately described.
+- **No "Slop":** Do not make slop changes. For example, submitting a 10,000+ line refactor when the commit message just says "Update readme" is unacceptable. Ensure your changes are focused, well-tested, and accurately described.
 - **Maintainer Discretion:** If maintainers feel a PR is slop, we reserve the right to fully close it without review.
 
 ## Typical Review Timeline
