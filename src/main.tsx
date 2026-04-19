@@ -5,19 +5,19 @@ import App from './App';
 import './index.css';
 
 const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            retry: 2,
-            refetchOnWindowFocus: false,
-            staleTime: 1000 * 60 * 5, // 5 minutes
-        },
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
     },
+  },
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <App />
-        </QueryClientProvider>
-    </React.StrictMode>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>,
 );

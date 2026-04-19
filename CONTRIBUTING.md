@@ -5,6 +5,7 @@ Thank you for your interest in contributing to IssueScope! We welcome contributi
 ## Pull Request Format and Description Requirements
 
 When creating a Pull Request (PR), please follow these guidelines:
+
 - Use a clear and descriptive title for your PR.
 - Provide a summary of the changes you made in the PR description.
 - Explain **why** the change was made, not just what was changed.
@@ -20,6 +21,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). Your com
 ```
 
 **Types:**
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
@@ -34,6 +36,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). Your com
 ## Test Expectations
 
 Before submitting a PR, ensure that your code passes all automated checks:
+
 - **Type Checking:** Run `bun run typecheck` to ensure there are no TypeScript errors.
 - **Build:** Run `bun run build` to ensure the project builds successfully.
 - **Tests:** Add unit tests for any new complex logic or utility functions. Existing tests must pass before the PR can be merged.
@@ -49,6 +52,7 @@ Before submitting a PR, ensure that your code passes all automated checks:
 ## Typical Review Timeline
 
 We aim to review Pull Requests within **3-5 business days**.
+
 - If we require changes, the timeline resets after you push the requested updates.
 - Please be patient! We will get to your PR as soon as possible.
 - If a week goes by without any activity, feel free to politely ping the maintainers in the PR comments.

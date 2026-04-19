@@ -7,6 +7,7 @@
 ## Tech Stack
 
 This project is built using modern web technologies:
+
 - **Frontend Framework:** React 19 + Vite
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4
@@ -29,24 +30,27 @@ This project is built using modern web technologies:
 These instructions have been tested on a clean machine to ensure a reliable setup.
 
 1. **Prerequisites:** Make sure you have [Bun](https://bun.sh/) installed on your machine.
-   
 2. **Clone the repository:**
+
    ```bash
    git clone https://github.com/vee1e/isscope.git
    cd isscope
    ```
 
 3. **Install dependencies:**
+
    ```bash
    bun install
    ```
 
 4. **Environment Variables (Optional):**
    Copy the example environment file if you wish to configure default keys (though they can be entered in the UI):
+
    ```bash
    cp .env.example .env
    ```
-   *(Create `.env.example` with `VITE_GITHUB_TOKEN=` and `VITE_OPENROUTER_API_KEY=` if needed).*
+
+   _(Create `.env.example` with `VITE_GITHUB_TOKEN=` and `VITE_OPENROUTER_API_KEY=` if needed)._
 
 5. **Start the development server:**
    ```bash
@@ -82,6 +86,7 @@ Contributions are welcome! Please read our [Contribution Guidelines](CONTRIBUTIN
 ## Contact Channel
 
 If you have questions, suggestions, or need support, please:
+
 - Open an issue in the [GitHub Issue Tracker](https://github.com/vee1e/isscope/issues).
 - Reach out to the maintainer on Discord at `@vei1e`.
 
