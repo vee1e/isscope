@@ -39,7 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  manage-by-issue:
+  manage-by-comment:
     if: github.event_name == 'issue_comment' && github.event.action == 'created'
     runs-on: ubuntu-latest
     permissions:
@@ -50,14 +50,26 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Issue/PR Number
+        id: get-number
+        run: |
+          if [ "${{ github.event.issue.pull_request }}" != "" ]; then
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+            echo "is_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+            echo "is_pr=false" >> $GITHUB_OUTPUT
+          fi
       - uses: mitchellh/vouch/action/manage-by-issue@v1
         with:
-          issue-id: ${{ github.event.issue.number }}
+          issue-id: ${{ steps.get-number.outputs.number }}
           comment-id: ${{ github.event.comment.id }}
+          pull-request: true
+          merge-immediately: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  manage-by-pr-comment:
+  manage-by-pr-review-comment:
     if: github.event_name == 'pull_request_review_comment' && github.event.action == 'created'
     runs-on: ubuntu-latest
     permissions:
@@ -71,5 +83,7 @@ jobs:
         with:
           issue-id: ${{ github.event.pull_request.number }}
           comment-id: ${{ github.event.comment.id }}
+          pull-request: true
+          merge-immediately: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
