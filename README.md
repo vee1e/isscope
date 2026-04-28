@@ -88,7 +88,7 @@ The application requires API keys to function. You can configure these directly 
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contribution Guidelines](CONTRIBUTING.md) for details on our code of conduct, pull request process, commit messages, and coding standards.
+Contributions are welcome! Please read our [Contribution Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for details on our community standards, pull request process, commit messages, and coding standards.
 
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feature/amazing-feature`).
