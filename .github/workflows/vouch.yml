@@ -7,6 +7,8 @@ on:
     types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
   check-issue:
@@ -17,7 +19,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: mitchellh/vouch/action/check-issue@main
+      - uses: mitchellh/vouch/action/check-issue@v1
         with:
           issue-number: ${{ github.event.issue.number }}
         env:
@@ -31,7 +33,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: mitchellh/vouch/action/check-pr@main
+      - uses: mitchellh/vouch/action/check-pr@v1
         with:
           pr-number: ${{ github.event.pull_request.number }}
         env:
@@ -46,9 +48,28 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: mitchellh/vouch/action/manage-by-issue@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: mitchellh/vouch/action/manage-by-issue@v1
         with:
           issue-id: ${{ github.event.issue.number }}
+          comment-id: ${{ github.event.comment.id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  manage-by-pr-comment:
+    if: github.event_name == 'pull_request_review_comment' && github.event.action == 'created'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: mitchellh/vouch/action/manage-by-issue@v1
+        with:
+          issue-id: ${{ github.event.pull_request.number }}
           comment-id: ${{ github.event.comment.id }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
