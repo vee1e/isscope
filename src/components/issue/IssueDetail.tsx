@@ -4,8 +4,7 @@ import { IssueMetadata } from './IssueMetadata';
 import { ExternalLink, MessageSquare, Calendar, User } from 'lucide-react';
 import type { RankedIssue } from '../../lib/types';
 import { formatTimestamp, formatTimeAgo } from '../../lib/utils/formatters';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import { MarkdownRenderer } from '../ui/MarkdownRenderer';
 
 interface IssueDetailProps {
   issue: RankedIssue | null;
@@ -264,7 +263,8 @@ export function IssueDetail({ issue }: IssueDetailProps) {
                       {formatTimeAgo(comment.created_at)}
                     </span>
                   </div>
-                  <div
+                  <MarkdownRenderer
+                    content={comment.body}
                     style={{
                       fontSize: 'var(--text-xs)',
                       color: 'var(--text-muted)',
@@ -272,71 +272,7 @@ export function IssueDetail({ issue }: IssueDetailProps) {
                       overflow: 'hidden',
                     }}
                     className="markdown-body"
-                  >
-                    <ReactMarkdown
-                      rehypePlugins={[rehypeRaw]}
-                      components={{
-                        img: ({ ...props }) => {
-                          const p = { ...props } as Record<string, unknown>;
-                          delete p.node;
-                          return (
-                            <img
-                              {...p}
-                              style={{
-                                maxWidth: '100%',
-                                borderRadius: '4px',
-                                border: '1px solid var(--border-subtle)',
-                              }}
-                            />
-                          );
-                        },
-                        a: ({ ...props }) => {
-                          const p = { ...props } as Record<string, unknown>;
-                          delete p.node;
-                          return (
-                            <a
-                              {...p}
-                              style={{ color: 'var(--text)', textDecoration: 'underline' }}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            />
-                          );
-                        },
-                        p: ({ ...props }) => {
-                          const p = { ...props } as Record<string, unknown>;
-                          delete p.node;
-                          return <p {...p} style={{ marginTop: '0.5em', marginBottom: '0.5em' }} />;
-                        },
-                        pre: ({ ...props }) => {
-                          const p = { ...props } as Record<string, unknown>;
-                          delete p.node;
-                          return (
-                            <pre
-                              {...p}
-                              style={{
-                                background: 'var(--bg-secondary)',
-                                padding: '8px',
-                                borderRadius: '4px',
-                                overflowX: 'auto',
-                              }}
-                            />
-                          );
-                        },
-                        code: ({ ...props }) => {
-                          const p = { ...props } as Record<string, unknown>;
-                          delete p.node;
-                          return (
-                            <code
-                              {...p}
-                              style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}
-                            />
-                          );
-                        },
-                      }}
-                    >
-                      {comment.body}
-                    </ReactMarkdown>
-                  </div>
+                  />
                 </div>
               ))}
             </div>
@@ -356,75 +292,15 @@ export function IssueDetail({ issue }: IssueDetailProps) {
               >
                 ── Issue Body ──
               </div>
-              <div
+              <MarkdownRenderer
+                content={issue.body}
                 style={{
                   fontSize: 'var(--text-xs)',
                   color: 'var(--text-muted)',
                   lineHeight: 1.7,
                 }}
                 className="markdown-body"
-              >
-                <ReactMarkdown
-                  rehypePlugins={[rehypeRaw]}
-                  components={{
-                    img: ({ ...props }) => {
-                      const p = { ...props } as Record<string, unknown>;
-                      delete p.node;
-                      return (
-                        <img
-                          {...p}
-                          style={{
-                            maxWidth: '100%',
-                            borderRadius: '4px',
-                            border: '1px solid var(--border-subtle)',
-                          }}
-                        />
-                      );
-                    },
-                    a: ({ ...props }) => {
-                      const p = { ...props } as Record<string, unknown>;
-                      delete p.node;
-                      return (
-                        <a
-                          {...p}
-                          style={{ color: 'var(--text)', textDecoration: 'underline' }}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        />
-                      );
-                    },
-                    p: ({ ...props }) => {
-                      const p = { ...props } as Record<string, unknown>;
-                      delete p.node;
-                      return <p {...p} style={{ marginTop: '0.5em', marginBottom: '0.5em' }} />;
-                    },
-                    pre: ({ ...props }) => {
-                      const p = { ...props } as Record<string, unknown>;
-                      delete p.node;
-                      return (
-                        <pre
-                          {...p}
-                          style={{
-                            background: 'var(--bg-secondary)',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            overflowX: 'auto',
-                          }}
-                        />
-                      );
-                    },
-                    code: ({ ...props }) => {
-                      const p = { ...props } as Record<string, unknown>;
-                      delete p.node;
-                      return (
-                        <code {...p} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }} />
-                      );
-                    },
-                  }}
-                >
-                  {issue.body}
-                </ReactMarkdown>
-              </div>
+              />
             </div>
           )}
         </div>
