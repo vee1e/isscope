@@ -67,8 +67,11 @@ export function InputScreen() {
 
   // Load API keys from localStorage on mount
   useEffect(() => {
-    const storedGithub = localStorage.getItem(STORAGE_KEY_GITHUB) || '';
-    const storedOpenRouter = localStorage.getItem(STORAGE_KEY_OPENROUTER) || '';
+    const storedGithubRaw = localStorage.getItem(STORAGE_KEY_GITHUB) || '';
+    const storedOpenRouterRaw = localStorage.getItem(STORAGE_KEY_OPENROUTER) || '';
+    // Decode obfuscated values (with fallback for legacy plain-text storage)
+    const storedGithub = (() => { try { return atob(storedGithubRaw); } catch { return storedGithubRaw; } })();
+    const storedOpenRouter = (() => { try { return atob(storedOpenRouterRaw); } catch { return storedOpenRouterRaw; } })();
     const storedMaxIssues = localStorage.getItem(STORAGE_KEY_MAX_ISSUES);
 
     if (storedGithub || storedOpenRouter) {
@@ -142,9 +145,12 @@ export function InputScreen() {
   const handleSaveApiKeys = () => {
     setSaveStatus('saving');
 
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY_GITHUB, localGithubToken);
-    localStorage.setItem(STORAGE_KEY_OPENROUTER, localOpenRouterKey);
+    // Save to localStorage with basic obfuscation (Base64 encoding)
+    // Note: This is NOT encryption — it prevents casual inspection.
+    // For production use, consider a proper credential manager or
+    // browser-based encryption (Web Crypto API).
+    localStorage.setItem(STORAGE_KEY_GITHUB, btoa(localGithubToken));
+    localStorage.setItem(STORAGE_KEY_OPENROUTER, btoa(localOpenRouterKey));
     localStorage.setItem(STORAGE_KEY_MAX_ISSUES, localMaxIssues.toString());
 
     // Update store
