@@ -533,6 +533,18 @@ export function InputScreen() {
                   >
                     GitHub Token (optional, for higher rate limits)
                   </label>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: '#f59e0b',
+                      marginBottom: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    Stored in plain text in browser localStorage
+                  </div>
                   <div style={{ position: 'relative' }}>
                     <input
                       type="password"
@@ -578,6 +590,18 @@ export function InputScreen() {
                   >
                     OpenRouter API Key (required for analysis)
                   </label>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: '#f59e0b',
+                      marginBottom: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    Stored in plain text in browser localStorage
+                  </div>
                   <div style={{ position: 'relative' }}>
                     <input
                       type="password"
