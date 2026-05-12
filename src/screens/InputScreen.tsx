@@ -92,9 +92,16 @@ export function InputScreen() {
       }
     }
 
-    setLocalGithubToken(storedGithub);
-    setLocalOpenRouterKey(storedOpenRouter);
-    setLocalMaxIssues(storedMaxIssues ? parseInt(storedMaxIssues, 10) : CONFIG.DEFAULT_MAX_ISSUES);
+    if (storedGithub) setLocalGithubToken(storedGithub);
+    if (storedOpenRouter) setLocalOpenRouterKey(storedOpenRouter);
+
+    if (storedMaxIssues) {
+      const parsed = parseInt(storedMaxIssues, 10);
+
+      if (!isNaN(parsed)) {
+        setLocalMaxIssues(parsed);
+      }
+    }
   }, [setApiKeys, setMaxIssues]);
 
   useEffect(() => {
