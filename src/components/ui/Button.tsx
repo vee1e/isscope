@@ -26,7 +26,7 @@ export function Button({
   const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
     primary: 'bg-[var(--bg-tertiary)] text-[var(--text)] border-[var(--border)]',
     ghost: 'bg-transparent text-[var(--text-muted)] border-transparent',
-    danger: 'bg-[rgba(248,81,73,0.1)] text-[var(--status-error)] border-[rgba(248,81,73,0.2)]',
+    danger: 'bg-[color-mix(in_srgb,var(--status-error),transparent_90%)] text-[var(--status-error)] border-[color-mix(in_srgb,var(--status-error),transparent_80%)]',
   };
   const stateClasses = disabled || loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer';
   const combinedClassName = [
