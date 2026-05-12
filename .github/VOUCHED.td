@@ -6,6 +6,7 @@
 #  - To denounce a user, prefix with minus: `-username` or `-platform:username`.
 #  - Optionally, add details after a space following the handle.
 
+-acagou ai slop and claiming an issue with open PR
 anasahhm
 aqilaziz
 eta7osc
