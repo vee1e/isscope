@@ -46,7 +46,7 @@ export function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading && <span className="animate-pulse-slow">⏳</span>}
+      {loading && <span className="animate-pulse-slow" aria-hidden="true">⏳</span>}
       {children}
     </button>
   );
