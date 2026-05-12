@@ -23,6 +23,7 @@ jobs:
         with:
           issue-number: ${{ github.event.issue.number }}
           auto-close: true
+          require-vouch: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -38,6 +39,7 @@ jobs:
         with:
           pr-number: ${{ github.event.pull_request.number }}
           auto-close: true
+          require-vouch: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
