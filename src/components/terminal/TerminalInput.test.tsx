@@ -10,4 +10,12 @@ describe('TerminalInput accessibility', () => {
 
     expect(markup).toContain('aria-label="Terminal input"');
   });
+
+  it('sets aria-invalid when hasError is true', () => {
+    const markup = renderToStaticMarkup(
+      <TerminalInput value="" onChange={() => {}} onSubmit={() => {}} hasError />,
+    );
+
+    expect(markup).toContain('aria-invalid="true"');
+  });
 });
