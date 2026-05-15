@@ -32,6 +32,7 @@ function formatTimeAgo(timestamp: number): string {
 const STORAGE_KEY_GITHUB = 'isscope_github_token';
 const STORAGE_KEY_OPENROUTER = 'isscope_openrouter_key';
 const STORAGE_KEY_MAX_ISSUES = 'isscope_max_issues';
+const STORAGE_KEY_REMEMBER_KEYS = 'isscope_remember_keys';
 
 export function InputScreen() {
   const {
@@ -62,14 +63,20 @@ export function InputScreen() {
   const [localOpenRouterKey, setLocalOpenRouterKey] = useState(openRouterKey);
   const [localMaxIssues, setLocalMaxIssues] = useState(maxIssues);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [rememberKeys, setRememberKeys] = useState(false);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Load API keys from localStorage on mount
   useEffect(() => {
-    const storedGithub = localStorage.getItem(STORAGE_KEY_GITHUB) || '';
-    const storedOpenRouter = localStorage.getItem(STORAGE_KEY_OPENROUTER) || '';
+    const shouldRemember = localStorage.getItem(STORAGE_KEY_REMEMBER_KEYS) === 'true';
+    const storedGithub = shouldRemember ? localStorage.getItem(STORAGE_KEY_GITHUB) || '' : '';
+    const storedOpenRouter = shouldRemember
+      ? localStorage.getItem(STORAGE_KEY_OPENROUTER) || ''
+      : '';
     const storedMaxIssues = localStorage.getItem(STORAGE_KEY_MAX_ISSUES);
+
+    setRememberKeys(shouldRemember);
 
     if (storedGithub || storedOpenRouter) {
       setApiKeys({
@@ -85,10 +92,16 @@ export function InputScreen() {
       }
     }
 
-    // Update local state
-    setLocalGithubToken(storedGithub);
-    setLocalOpenRouterKey(storedOpenRouter);
-    setLocalMaxIssues(storedMaxIssues ? parseInt(storedMaxIssues, 10) : CONFIG.DEFAULT_MAX_ISSUES);
+    if (storedGithub) setLocalGithubToken(storedGithub);
+    if (storedOpenRouter) setLocalOpenRouterKey(storedOpenRouter);
+
+    if (storedMaxIssues) {
+      const parsed = parseInt(storedMaxIssues, 10);
+
+      if (!isNaN(parsed)) {
+        setLocalMaxIssues(parsed);
+      }
+    }
   }, [setApiKeys, setMaxIssues]);
 
   useEffect(() => {
@@ -142,19 +155,25 @@ export function InputScreen() {
   const handleSaveApiKeys = () => {
     setSaveStatus('saving');
 
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY_GITHUB, localGithubToken);
-    localStorage.setItem(STORAGE_KEY_OPENROUTER, localOpenRouterKey);
+    if (rememberKeys) {
+      localStorage.setItem(STORAGE_KEY_GITHUB, localGithubToken);
+      localStorage.setItem(STORAGE_KEY_OPENROUTER, localOpenRouterKey);
+      localStorage.setItem(STORAGE_KEY_REMEMBER_KEYS, 'true');
+    } else {
+      localStorage.removeItem(STORAGE_KEY_GITHUB);
+      localStorage.removeItem(STORAGE_KEY_OPENROUTER);
+      localStorage.setItem(STORAGE_KEY_REMEMBER_KEYS, 'false');
+    }
+
     localStorage.setItem(STORAGE_KEY_MAX_ISSUES, localMaxIssues.toString());
 
-    // Update store
     setApiKeys({
       githubToken: localGithubToken,
       openRouterKey: localOpenRouterKey,
     });
+
     setMaxIssues(localMaxIssues);
 
-    // Show success state
     setTimeout(() => {
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -660,6 +679,27 @@ export function InputScreen() {
                     Limits the number of issues fetched from GitHub. Lower values are faster.
                   </div>
                 </div>
+
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={rememberKeys}
+                    onChange={(e) => {
+                      setRememberKeys(e.target.checked);
+                      setSaveStatus('idle');
+                    }}
+                  />
+                  Remember API keys
+                </label>
 
                 <Button
                   onClick={handleSaveApiKeys}

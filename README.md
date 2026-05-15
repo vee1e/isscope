@@ -36,7 +36,7 @@ This project is built using modern web technologies:
 - Fetches issue details and performs AI analysis in parallel for high throughput.
 - Renders issue bodies and comments with full Markdown and HTML image support.
 - Vim-style navigation (j/k, gg, G) and keyboard shortcuts for efficiency.
-- API keys are stored in memory and never sent to a backend server.
+- API keys are stored only in memory by default and are never sent to a backend server. Users can optionally enable local browser storage for persistence.
 
 ## Local Setup Instructions
 
