@@ -59,6 +59,7 @@ export function TerminalInput({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          aria-label="Terminal input"
           disabled={disabled}
           style={{
             fontFamily: 'var(--font-mono)',
