@@ -2,6 +2,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { historyService } from './historyService';
 
 async function resetHistoryService() {
   (globalThis as any).indexedDB = new IDBFactory();
@@ -16,8 +17,6 @@ async function resetHistoryService() {
   svc.db = null;
   svc.initPromise = null;
 }
-
-import { historyService } from './historyService';
 
 const BASE_ISSUE = {
   number: 1,
