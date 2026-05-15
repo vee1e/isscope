@@ -11,7 +11,7 @@ describe('TerminalInput accessibility', () => {
     expect(markup).toContain('aria-label="Terminal input"');
   });
 
-  it('sets aria-invalid when hasError is true', () => {
+  it('sets aria-invalid when the terminal input has an error', () => {
     const markup = renderToStaticMarkup(
       <TerminalInput value="" onChange={() => {}} onSubmit={() => {}} hasError />,
     );
