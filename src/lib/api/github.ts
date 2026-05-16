@@ -27,7 +27,11 @@ interface RateLimitInfo {
   reset: number;
 }
 
-const rateLimitInfo: RateLimitInfo = { remaining: 5000, limit: 5000, reset: 0 };
+const rateLimitInfo: RateLimitInfo = {
+  remaining: 5000,
+  limit: 5000,
+  reset: 0,
+};
 
 import { useAppStore } from '../../store/appStore';
 
@@ -35,10 +39,13 @@ function headers(): HeadersInit {
   const h: HeadersInit = {
     Accept: 'application/vnd.github.v3+json',
   };
+
   const token = useAppStore.getState().githubToken;
+
   if (token) {
     h.Authorization = `Bearer ${token}`;
   }
+
   return h;
 }
 
@@ -46,29 +53,50 @@ function updateRateLimit(response: Response) {
   const remaining = response.headers.get('X-RateLimit-Remaining');
   const limit = response.headers.get('X-RateLimit-Limit');
   const reset = response.headers.get('X-RateLimit-Reset');
-  if (remaining) rateLimitInfo.remaining = parseInt(remaining, 10);
-  if (limit) rateLimitInfo.limit = parseInt(limit, 10);
-  if (reset) rateLimitInfo.reset = parseInt(reset, 10);
+
+  if (remaining) {
+    rateLimitInfo.remaining = parseInt(remaining, 10);
+  }
+
+  if (limit) {
+    rateLimitInfo.limit = parseInt(limit, 10);
+  }
+
+  if (reset) {
+    rateLimitInfo.reset = parseInt(reset, 10);
+  }
 }
 
 export function getRateLimitInfo(): RateLimitInfo {
   return { ...rateLimitInfo };
 }
 
-async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
+async function fetchWithRetry(
+  url: string,
+  retries = 3,
+  extraHeaders: HeadersInit = {},
+): Promise<Response> {
   for (let i = 0; i < retries; i++) {
-    const response = await fetch(url, { headers: headers() });
+    const response = await fetch(url, {
+      headers: {
+        ...headers(),
+        ...extraHeaders,
+      },
+    });
+
     updateRateLimit(response);
 
     if (response.status === 403 && rateLimitInfo.remaining <= 0) {
       const resetTime = rateLimitInfo.reset * 1000 - Date.now();
       const waitTime = Math.max(resetTime, 1000);
+
       await new Promise((r) => setTimeout(r, waitTime));
       continue;
     }
 
     if (response.status === 429) {
       const backoff = Math.pow(2, i) * 1000;
+
       await new Promise((r) => setTimeout(r, backoff));
       continue;
     }
@@ -79,6 +107,7 @@ async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
 
     return response;
   }
+
   throw new Error('Max retries exceeded for GitHub API');
 }
 
@@ -96,9 +125,14 @@ export async function searchIssues(
 
   while (hasMore && allIssues.length < maxIssues) {
     const query = encodeURIComponent(`repo:${owner}/${repo} is:issue state:open -linked:pr`);
-    const url = `${CONFIG.GITHUB_API_BASE}/search/issues?q=${query}&per_page=${CONFIG.DEFAULT_PAGE_SIZE}&page=${page}&sort=comments&order=asc`;
+
+    const url =
+      `${CONFIG.GITHUB_API_BASE}/search/issues?q=${query}` +
+      `&per_page=${CONFIG.DEFAULT_PAGE_SIZE}` +
+      `&page=${page}&sort=comments&order=asc`;
 
     const response = await fetchWithRetry(url);
+
     const data: GitHubSearchResponse = await response.json();
 
     const issues = data.items
@@ -120,16 +154,20 @@ export async function searchIssues(
       );
 
     allIssues.push(...issues);
+
     onProgress?.(
-      `Fetched page ${page}: ${allIssues.length}/${Math.min(data.total_count, maxIssues)} issues (rate limit: ${rateLimitInfo.remaining})`,
+      `Fetched page ${page}: ${allIssues.length}/${Math.min(
+        data.total_count,
+        maxIssues,
+      )} issues (rate limit: ${rateLimitInfo.remaining})`,
     );
 
     hasMore =
       allIssues.length < data.total_count && issues.length > 0 && allIssues.length < maxIssues;
+
     page++;
   }
 
-  // Limit to max issues
   const limitedIssues = allIssues.slice(0, maxIssues);
 
   if (allIssues.length > maxIssues) {
@@ -144,8 +182,12 @@ export async function fetchIssueComments(
   repo: string,
   issueNumber: number,
 ): Promise<Comment[]> {
-  const url = `${CONFIG.GITHUB_API_BASE}/repos/${owner}/${repo}/issues/${issueNumber}/comments?per_page=100`;
+  const url =
+    `${CONFIG.GITHUB_API_BASE}/repos/${owner}/${repo}` +
+    `/issues/${issueNumber}/comments?per_page=100`;
+
   const response = await fetchWithRetry(url);
+
   const data = await response.json();
 
   return data.map(
@@ -164,20 +206,17 @@ export async function fetchIssueTimeline(
   repo: string,
   issueNumber: number,
 ): Promise<TimelineEvent[]> {
-  const url = `${CONFIG.GITHUB_API_BASE}/repos/${owner}/${repo}/issues/${issueNumber}/timeline?per_page=100`;
+  const url =
+    `${CONFIG.GITHUB_API_BASE}/repos/${owner}/${repo}` +
+    `/issues/${issueNumber}/timeline?per_page=100`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        ...headers(),
-        Accept: 'application/vnd.github.mockingbird-preview+json',
-      },
+    const response = await fetchWithRetry(url, 3, {
+      Accept: 'application/vnd.github.mockingbird-preview+json',
     });
-    updateRateLimit(response);
-
-    if (!response.ok) return [];
 
     const data: Record<string, unknown>[] = await response.json();
+
     return data.map(
       (e): TimelineEvent => ({
         event: e.event as string,
@@ -206,10 +245,13 @@ export async function fetchIssueDetails(
     fetchIssueTimeline(owner, repo, issue.number),
   ]);
 
-  return { ...issue, comments, timeline };
+  return {
+    ...issue,
+    comments,
+    timeline,
+  };
 }
 
-// Concurrency-limited batch fetcher
 // Concurrency-limited batch fetcher
 export async function fetchAllIssueDetails(
   owner: string,
@@ -218,39 +260,35 @@ export async function fetchAllIssueDetails(
   onProgress?: (current: number, total: number, message: string) => void,
   isCancelled?: () => boolean,
 ): Promise<Issue[]> {
-  // Increase concurrency for fetching details as these are lighter requests usually
   const CONCURRENCY = 10;
 
-  // Pool implementation
   const queue = [...issues];
-  // Map to preserve order? No, user doesn't care about order of completion, but result array should be ordered?
-  // Actually, setIssues replaces the whole array.
-  // The issue list is sorted by rank later.
-  // But initially it's by updated/comments.
-  // We should ideally return issues in the same order as input?
-  // The caller `setIssues(detailedIssues)` expects an array.
-  // If I return them shuffled, the list order changes.
-  // I should maintain order.
 
   const resultsMap = new Map<number, Issue>();
+
   let completed = 0;
 
   const next = async (): Promise<void> => {
-    if (isCancelled?.() || queue.length === 0) return;
+    if (isCancelled?.() || queue.length === 0) {
+      return;
+    }
 
     const issue = queue.shift();
-    if (!issue) return;
+
+    if (!issue) {
+      return;
+    }
 
     try {
       const detailed = await fetchIssueDetails(owner, repo, issue, () => {
-        // Determine completion
-        // We don't want to spam progress for every sub-step of every issue in parallel
-        // onProgress?.(completed, issues.length, msg);
+        // Intentionally muted to avoid excessive parallel progress updates
       });
 
       if (!isCancelled?.()) {
         resultsMap.set(issue.number, detailed);
+
         completed++;
+
         onProgress?.(
           completed,
           issues.length,
@@ -258,8 +296,8 @@ export async function fetchAllIssueDetails(
         );
       }
     } catch {
-      // If fail, push original issue?
       resultsMap.set(issue.number, issue);
+
       completed++;
     }
 
@@ -267,8 +305,8 @@ export async function fetchAllIssueDetails(
   };
 
   const workers = Array.from({ length: Math.min(CONCURRENCY, issues.length) }, () => next());
+
   await Promise.all(workers);
 
-  // Reconstruct array in original order
   return issues.map((i) => resultsMap.get(i.number) || i);
 }
