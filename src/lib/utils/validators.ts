@@ -1,3 +1,5 @@
+// src/lib/utils/validators.ts
+
 import { REPO_REGEX } from '../constants';
 
 export function validateRepoInput(input: string): { valid: boolean; error?: string } {
@@ -9,8 +11,10 @@ export function validateRepoInput(input: string): { valid: boolean; error?: stri
 
   // Handle full GitHub URLs
   const urlMatch = trimmed.match(/github\.com\/([^/]+\/[^/]+)/);
+
   if (urlMatch) {
     const path = urlMatch[1].replace(/\.git$/, '');
+
     if (REPO_REGEX.test(path)) {
       return { valid: true };
     }
@@ -28,10 +32,15 @@ export function parseRepoInput(input: string): { owner: string; repo: string } {
 
   // Handle full GitHub URLs
   const urlMatch = trimmed.match(/github\.com\/([^/]+)\/([^/]+)/);
+
   if (urlMatch) {
-    return { owner: urlMatch[1], repo: urlMatch[2].replace(/\.git$/, '') };
+    return {
+      owner: urlMatch[1],
+      repo: urlMatch[2].replace(/\.git$/, ''),
+    };
   }
 
   const [owner, repo] = trimmed.split('/');
+
   return { owner, repo };
 }

@@ -1,3 +1,5 @@
+// src/lib/utils/formatters.ts
+
 // ── Formatters ────────────────────────────────────
 
 // Convert ISO date string into something readable like "Jan 1, 2023"
@@ -12,8 +14,10 @@ export function formatTimestamp(iso: string): string {
 }
 
 // Returns relative time like "2d ago" or "5m ago"
-export function formatTimeAgo(iso: string): string {
-  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+export function formatTimeAgo(timestamp: string | number): string {
+  const date = new Date(timestamp);
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
   const intervals = [
     { label: 'y', seconds: 31536000 },
