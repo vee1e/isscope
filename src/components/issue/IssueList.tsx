@@ -4,6 +4,11 @@ import { IssueListItem } from './IssueListItem';
 import { Search } from 'lucide-react';
 import type { RankedIssue } from '../../lib/types';
 
+const isMac = () =>
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+
+const shortcut = isMac() ? '[Cmd+K]' : '[Ctrl+K]';
+
 interface IssueListProps {
   issues: RankedIssue[];
   selectedId: number | null;
@@ -38,7 +43,6 @@ export function IssueList({
 
   // Focus trap on mount
   React.useEffect(() => {
-    // Short timeout to ensure render
     const timer = setTimeout(() => {
       trapRef.current?.focus();
     }, 50);
@@ -71,7 +75,6 @@ export function IssueList({
 
   // Auto-scroll to selected item
   React.useEffect(() => {
-    // ... (existing scroll logic)
     if (selectedIndex >= 0 && filtered.length > 0) {
       const el = document.getElementById(`issue-${selectedIndex}`);
       if (el) {
@@ -89,7 +92,6 @@ export function IssueList({
         borderRight: '1px solid var(--border)',
       }}
       onClick={() => {
-        // If clicking empty space, refocus trap unless we clicked an interactive element
         if (document.activeElement === document.body) {
           trapRef.current?.focus();
         }
@@ -106,9 +108,7 @@ export function IssueList({
           height: 0,
           width: 0,
         }}
-        onBlur={() => {
-          // Optional: force keep focus? No, user might want to click outside.
-        }}
+        onBlur={() => {}}
       />
 
       {/* Header */}
@@ -146,7 +146,7 @@ export function IssueList({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          placeholder="Search issues... [Cmd+K]"
+          placeholder={`Search issues... ${shortcut}`}
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-xs)',
@@ -199,7 +199,7 @@ export function IssueList({
           background: 'var(--bg-tertiary)',
         }}
       >
-        [j/k] Nav [Enter] Sel [Cmd+K] Search
+        {`[j/k] Nav [Enter] Sel ${shortcut} Search`}
       </div>
     </div>
   );
