@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ScrollArea } from '../ui/ScrollArea';
 import { IssueListItem } from './IssueListItem';
-import { Search } from 'lucide-react';
+import { Search, SearchX } from 'lucide-react';
 import type { RankedIssue } from '../../lib/types';
 
 interface IssueListProps {
@@ -165,14 +165,38 @@ export function IssueList({
         {filtered.length === 0 ? (
           <div
             style={{
-              padding: '20px 12px',
+              padding: '32px 12px',
               textAlign: 'center',
-              color: 'var(--text-dim)',
-              fontSize: 'var(--text-xs)',
-              fontFamily: 'var(--font-mono)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
-            {searchQuery ? 'No issues match your search.' : 'No issues found.'}
+            <SearchX size={28} style={{ color: 'var(--text-dim)', opacity: 0.5 }} />
+            <span
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: 'var(--text-xs)',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              {searchQuery ? `No issues match "${searchQuery}"` : 'No issues found.'}
+            </span>
+            {searchQuery && (
+              <span
+                style={{
+                  color: 'var(--text-dim)',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+                onClick={() => onSearchChange('')}
+              >
+                clear search
+              </span>
+            )}
           </div>
         ) : (
           filtered.map((issue, index) => (
