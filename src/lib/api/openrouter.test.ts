@@ -250,7 +250,7 @@ describe('OpenRouter API Client', () => {
       );
 
       let isCancelledVal = false;
-      const analyses = await analyzeAllIssues(
+      const promise = analyzeAllIssues(
         [issueA, issueB],
         undefined,
         undefined,
@@ -258,6 +258,7 @@ describe('OpenRouter API Client', () => {
       );
 
       isCancelledVal = true;
+      const analyses = await promise;
 
       expect(analyses).toBeDefined();
     });
