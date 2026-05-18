@@ -36,5 +36,12 @@ describe('TerminalInput component', () => {
     const input = screen.getByPlaceholderText('Type here...');
     fireEvent.keyDown(input, { key: 'Escape', code: 'Escape' });
     expect(onChange).toHaveBeenCalledWith('');
+    expect(input).toHaveFocus();
+  });
+
+  it('applies error styles when hasError is true', () => {
+    render(<TerminalInput value="" onChange={vi.fn()} onSubmit={vi.fn()} hasError />);
+    const prefix = screen.getByText('>');
+    expect(prefix.style.color).toContain('var(--status-error)');
   });
 });

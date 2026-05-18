@@ -35,4 +35,10 @@ describe('TerminalLog component', () => {
     // The header/footer elements are also rendered
     expect(screen.getByText(/Activity Log/)).toBeInTheDocument();
   });
+
+  it('passes scrollRef to ScrollArea', () => {
+    const ref = React.createRef<HTMLDivElement>();
+    render(<TerminalLog entries={[]} scrollRef={ref} />);
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
 });
