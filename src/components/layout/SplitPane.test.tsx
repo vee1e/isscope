@@ -11,19 +11,37 @@ describe('SplitPane component', () => {
   });
 
   it('handles mouse events for dragging', () => {
-    render(<SplitPane left={<div>Left Pane</div>} right={<div>Right Pane</div>} />);
-    // The divider does not have a role or aria-label, so we can find it by looking for the element with col-resize cursor
+    const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function () {
+      return {
+        width: 1000,
+        left: 0,
+        top: 0,
+        right: 1000,
+        bottom: 500,
+        x: 0,
+        y: 0,
+        height: 500,
+        toJSON: () => {},
+      };
+    };
+
+    render(
+      <SplitPane left={<div>Left Pane</div>} right={<div>Right Pane</div>} defaultSplit={40} />,
+    );
+
     const leftPane = screen.getByText('Left Pane').parentElement;
-    const divider = leftPane?.nextElementSibling;
+    const divider = screen.getByTestId('split-pane-divider');
 
     expect(divider).toBeInTheDocument();
+    expect(leftPane).toHaveStyle({ width: '40%' });
 
-    if (divider) {
-      fireEvent.mouseDown(divider);
-      fireEvent.mouseMove(window, { clientX: 100 });
-      fireEvent.mouseUp(window);
-    }
+    fireEvent.mouseDown(divider);
+    fireEvent.mouseMove(window, { clientX: 600 });
+    fireEvent.mouseUp(window);
 
-    // Test successfully ran if no errors are thrown during fireEvent
+    expect(leftPane).toHaveStyle({ width: '60%' });
+
+    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
   });
 });
