@@ -316,7 +316,7 @@ describe('GitHub API Client', () => {
         .mockResolvedValueOnce(createMockResponse(200, [])); // issue 1 timeline
 
       let isCancelledVal = false;
-      const detailedIssues = await fetchAllIssueDetails(
+      const promise = fetchAllIssueDetails(
         'owner',
         'repo',
         [issue1, issue2],
@@ -324,8 +324,9 @@ describe('GitHub API Client', () => {
         () => isCancelledVal,
       );
 
-      // Cancel after first batch item starts
+      // Cancel immediately after starting the async operation
       isCancelledVal = true;
+      const detailedIssues = await promise;
 
       // Because cancellation is evaluated in workers, subsequent queue items are ignored
       expect(detailedIssues).toBeDefined();
