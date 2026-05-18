@@ -10,12 +10,8 @@ describe('ScrollArea component', () => {
   });
 
   it('applies maxHeight when provided', () => {
-    render(
-      <ScrollArea maxHeight="200px" data-testid="scroll-area">
-        Content
-      </ScrollArea>,
-    );
-    const element = screen.getByTestId('scroll-area');
+    render(<ScrollArea maxHeight="200px">Scroll Area Content</ScrollArea>);
+    const element = screen.getByText('Scroll Area Content');
     expect(element.style.maxHeight).toBe('200px');
   });
 
