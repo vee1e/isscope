@@ -69,7 +69,7 @@ describe('useAppStore (Zustand Global State)', () => {
 
       // Set too low (below MIN_MAX_ISSUES, which is likely 1 or 5)
       useAppStore.getState().setMaxIssues(-5);
-      expect(useAppStore.getState().maxIssues).toBeGreaterThanOrEqual(1);
+      expect(useAppStore.getState().maxIssues).toBe(1); // Or the specific CONFIG.MIN_MAX_ISSUES value
     });
 
     it('sets fetch progress correctly', () => {
