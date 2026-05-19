@@ -63,8 +63,56 @@ export function exportToMarkdown(issues: RankedIssue[], repoName: string): strin
   return lines.filter((l) => l !== undefined).join('\n');
 }
 
+function csvCell(value: string | number | null | undefined): string {
+  const text = String(value ?? '');
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+export function exportToCSV(issues: RankedIssue[]): string {
+  const headers = [
+    'Rank',
+    'Issue #',
+    'Title',
+    'Score',
+    'Status',
+    'Complexity',
+    'Newcomer Friendliness',
+    'Skills Required',
+    'URL',
+  ];
+
+  const rows = issues.map((issue, i) => {
+    const analysis = issue.analysis;
+
+    return [
+      i + 1,
+      issue.number,
+      issue.title,
+      issue.score,
+      analysis ? statusLabel(analysis.status) : '',
+      analysis ? complexityLabel(analysis.complexity) : '',
+      analysis ? friendlinessLabel(analysis.newcomer_friendliness) : '',
+      analysis?.skills_required.join(', ') ?? '',
+      issue.html_url,
+    ];
+  });
+
+  return `\uFEFF${[headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
+}
+
 export function downloadMarkdown(content: string, filename: string): void {
   const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadCSV(content: string, filename: string): void {
+  const csvContent = content.startsWith('\uFEFF') ? content : `\uFEFF${content}`;
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

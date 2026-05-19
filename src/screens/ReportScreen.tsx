@@ -7,9 +7,9 @@ import { useAppStore } from '../store/appStore';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import type { RankedIssue } from '../lib/types';
 import { Button } from '../components/ui/Button';
-import { Download, RotateCcw } from 'lucide-react';
+import { Download, FileSpreadsheet, RotateCcw } from 'lucide-react';
 import { parseRepoInput } from '../lib/utils/validators';
-import { exportToMarkdown, downloadMarkdown } from '../lib/utils/exporters';
+import { exportToMarkdown, downloadMarkdown, exportToCSV, downloadCSV } from '../lib/utils/exporters';
 
 export function ReportScreen() {
   const { getRankedIssues, selectedIssueId, selectIssue, searchQuery, setSearchQuery } =
@@ -77,6 +77,14 @@ export function ReportScreen() {
     useAppStore.getState().addLog('Report exported as Markdown.', 'success');
   }, [getRankedIssues, repoInput]);
 
+  const handleExportCSV = useCallback(() => {
+    const ranked = getRankedIssues();
+    const { owner, repo } = parseRepoInput(repoInput);
+    const csv = exportToCSV(ranked);
+    downloadCSV(csv, `isscope-report-${owner}-${repo}.csv`);
+    useAppStore.getState().addLog('Report exported as CSV.', 'success');
+  }, [getRankedIssues, repoInput]);
+
   return (
     <ScreenLayout>
       <div
@@ -95,6 +103,9 @@ export function ReportScreen() {
         <div style={{ display: 'flex', gap: '6px' }}>
           <Button variant="ghost" size="sm" onClick={handleExport} title="Export Markdown report">
             <Download size={13} /> Export
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleExportCSV} title="Export CSV report">
+            <FileSpreadsheet size={13} /> CSV
           </Button>
           <Button variant="ghost" size="sm" onClick={reset} title="New analysis">
             <RotateCcw size={13} /> New
