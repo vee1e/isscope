@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TerminalInput } from './TerminalInput';
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
@@ -11,13 +12,26 @@ describe('TerminalInput component', () => {
     expect(screen.getByPlaceholderText('Type here...')).toBeInTheDocument();
   });
 
-  it('calls onChange when typing', () => {
+  it('calls onChange when typing', async () => {
+    const user = userEvent.setup();
     const onChange = vi.fn();
-    const onSubmit = vi.fn();
-    render(<TerminalInput value="" onChange={onChange} onSubmit={onSubmit} />);
+    const Wrapper = () => {
+      const [val, setVal] = React.useState('');
+      return (
+        <TerminalInput
+          value={val}
+          onChange={(v) => {
+            setVal(v);
+            onChange(v);
+          }}
+          onSubmit={vi.fn()}
+        />
+      );
+    };
+    render(<Wrapper />);
     const input = screen.getByPlaceholderText('Type here...');
-    fireEvent.change(input, { target: { value: 'hello' } });
-    expect(onChange).toHaveBeenCalledWith('hello');
+    await user.type(input, 'hello');
+    expect(onChange).toHaveBeenLastCalledWith('hello');
   });
 
   it('calls onSubmit when Enter is pressed', () => {
@@ -48,5 +62,11 @@ describe('TerminalInput component', () => {
 
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('applies error styles when hasError is true', () => {
+    render(<TerminalInput value="" onChange={vi.fn()} onSubmit={vi.fn()} hasError />);
+    const prompt = screen.getByText('>');
+    expect(prompt).toHaveStyle({ color: 'var(--status-error)' });
   });
 });
