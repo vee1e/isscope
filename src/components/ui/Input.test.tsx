@@ -1,0 +1,26 @@
+import { render, screen } from '@testing-library/react';
+import { Input } from './Input';
+import { describe, it, expect } from 'vitest';
+import React from 'react';
+
+describe('Input component', () => {
+  it('renders correctly', () => {
+    render(<Input placeholder="Enter text" />);
+    expect(screen.getByPlaceholderText('Enter text')).toBeInTheDocument();
+  });
+
+  it('passes ref correctly', () => {
+    const ref = React.createRef<HTMLInputElement>();
+    render(<Input ref={ref} />);
+    expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it('applies error styles when hasError is true', () => {
+    render(<Input hasError data-testid="error-input" />);
+    const input = screen.getByTestId('error-input');
+    // We use .style.borderColor directly instead of toHaveStyle because
+    // JSDOM's toHaveStyle matcher fails to resolve CSS variables for border properties
+    // and computes them to transparent/empty.
+    expect(input.style.borderColor).toBe('var(--status-error)');
+  });
+});
