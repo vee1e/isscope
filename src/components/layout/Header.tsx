@@ -50,21 +50,7 @@ export function Header({ rightContent }: HeaderProps) {
 
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          style={{
-            background: 'none',
-            border: '1px solid var(--border-subtle)',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            borderRadius: '4px',
-            padding: '4px 6px',
-            display: 'flex',
-            alignItems: 'center',
-            transition: 'all 0.15s ease',
-          }}
-        >
+        <button onClick={toggleTheme} aria-label="Toggle theme" className="theme-toggle-btn">
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
 

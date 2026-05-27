@@ -260,3 +260,20 @@ body {
 .transition-default {
   transition: all 0.15s ease;
 }
+.theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
