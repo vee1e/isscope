@@ -1,11 +1,14 @@
 import React from 'react';
-import { Monitor } from 'lucide-react';
+import { Monitor, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../../hooks/useTheme';
 
 interface HeaderProps {
   rightContent?: React.ReactNode;
 }
 
 export function Header({ rightContent }: HeaderProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header
       style={{
@@ -46,7 +49,27 @@ export function Header({ rightContent }: HeaderProps) {
       </div>
 
       {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>{rightContent}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          style={{
+            background: 'none',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            borderRadius: '4px',
+            padding: '4px 6px',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
+
+        {rightContent}
+      </div>
     </header>
   );
 }

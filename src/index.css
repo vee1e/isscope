@@ -35,6 +35,26 @@
   --text-xl: 20px;
   --text-2xl: 24px;
 }
+[data-theme='light'] {
+  /* Backgrounds */
+  --bg: #f8f8f8;
+  --bg-secondary: #efefef;
+  --bg-tertiary: #e6e6e6;
+
+  /* Text */
+  --text: #1a1a1a;
+  --text-muted: #555555;
+  --text-dim: #888888;
+
+  /* Accents */
+  --primary: #404040;
+  --border: #d4d4d4;
+  --border-subtle: #e8e8e8;
+
+  /* Cursor & Selection */
+  --cursor: #404040;
+  --selection: rgba(0, 0, 0, 0.08);
+}
 
 /* ── Reset ─────────────────────────────────── */
 *,
