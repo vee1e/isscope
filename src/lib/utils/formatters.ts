@@ -21,8 +21,9 @@ export function formatTimestamp(iso: string): string {
  * @param iso - The ISO 8601 timestamp string.
  * @returns A human-readable relative time string.
  */
-export function formatTimeAgo(iso: string): string {
-  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+export function formatTimeAgo(ts: string | number): string {
+  const date = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   const intervals = [
     { label: 'y', seconds: 31536000 },
     { label: 'mo', seconds: 2592000 },

@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useAppStore } from '../store/appStore';
 import { analyzeAllIssues } from '../lib/api/openrouter';
 import { historyService } from '../lib/history/historyService';
+import { parseRepoInput } from '../lib/utils/validators';
 import type { Issue } from '../lib/types';
 
 export function useIssueAnalysis() {
@@ -109,19 +110,4 @@ export function useIssueAnalysis() {
   return { analyzeIssues, cancel };
 }
 
-function parseRepoInput(input: string): { owner: string; repo: string } {
-  // Handle full URL or owner/repo format
-  if (input.includes('github.com')) {
-    const match = input.match(/github\.com\/([^/]+)\/([^/]+)/);
-    if (match) {
-      return { owner: match[1], repo: match[2].replace(/\.git$/, '') };
-    }
-  }
 
-  const parts = input.split('/');
-  if (parts.length >= 2) {
-    return { owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
-  }
-
-  throw new Error('Invalid repository format');
-}
