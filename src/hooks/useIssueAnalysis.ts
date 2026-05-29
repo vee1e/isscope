@@ -17,25 +17,16 @@ export function useIssueAnalysis() {
       const { owner, repo } = parseRepoInput(repoInput);
       addLog('Checking history for previous analyses...', 'info');
 
-      const issuesToAnalyze: Issue[] = [];
-      const historyAnalysesResults: Array<{
-        issueNumber: number;
-        result: Awaited<ReturnType<typeof historyService.shouldUseHistoryAnalysis>>;
-      }> = [];
+      const historyAnalysesResults = await Promise.all(
+        issues.map(async (issue) => {
+          const result = await historyService.shouldUseHistoryAnalysis(owner, repo, issue.number, issue);
+          return { issueNumber: issue.number, result };
+        })
+      );
 
-      for (const issue of issues) {
-        const historyResult = await historyService.shouldUseHistoryAnalysis(
-          owner,
-          repo,
-          issue.number,
-          issue,
-        );
-        historyAnalysesResults.push({ issueNumber: issue.number, result: historyResult });
-
-        if (!historyResult.useHistory) {
-          issuesToAnalyze.push(issue);
-        }
-      }
+      const issuesToAnalyze = historyAnalysesResults
+        .filter(({ result }) => !result.useHistory)
+        .map(({ issueNumber }) => issues.find((i) => i.number === issueNumber)!);
 
       const historyCount = issues.length - issuesToAnalyze.length;
       if (historyCount > 0) {
