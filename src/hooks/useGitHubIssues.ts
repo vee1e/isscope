@@ -133,6 +133,7 @@ export function useGitHubIssues() {
     },
     [
       repoInput,
+      maxIssues,
       setIssues,
       setAnalyses,
       analyses,

@@ -7,18 +7,22 @@ import type { Issue } from '../lib/types';
 
 export function useIssueAnalysis() {
   const { setAnalysis, setFetchProgress, setScreen, addLog, repoInput } = useAppStore();
+
   const cancelRef = useRef(false);
 
   const analyzeIssues = useCallback(
     async (issues: Issue[]) => {
       cancelRef.current = false;
+
       setScreen('analyzing');
 
       // Check for history analyses
       const { owner, repo } = parseRepoInput(repoInput);
+
       addLog('Checking history for previous analyses...', 'info');
 
       const issuesToAnalyze: Issue[] = [];
+
       const historyAnalysesResults: Array<{
         issueNumber: number;
         result: Awaited<ReturnType<typeof historyService.shouldUseHistoryAnalysis>>;
@@ -31,7 +35,11 @@ export function useIssueAnalysis() {
           issue.number,
           issue,
         );
-        historyAnalysesResults.push({ issueNumber: issue.number, result: historyResult });
+
+        historyAnalysesResults.push({
+          issueNumber: issue.number,
+          result: historyResult,
+        });
 
         if (!historyResult.useHistory) {
           issuesToAnalyze.push(issue);
@@ -39,8 +47,10 @@ export function useIssueAnalysis() {
       }
 
       const historyCount = issues.length - issuesToAnalyze.length;
+
       if (historyCount > 0) {
         addLog(`✓ Using ${historyCount} previous analyses from history`, 'success');
+
         // Apply history analyses
         for (const { issueNumber, result } of historyAnalysesResults) {
           if (result.useHistory && result.historyAnalysis) {
@@ -51,21 +61,33 @@ export function useIssueAnalysis() {
 
       if (issuesToAnalyze.length === 0) {
         addLog('✓ All analyses loaded from history', 'success');
+
         setScreen('report');
+
         return;
       }
 
       addLog(`Analyzing ${issuesToAnalyze.length} issues with AI...`, 'info');
+
       addLog(
         `Model: ${import.meta.env.VITE_MODEL_NAME || 'arcee-ai/trinity-large-preview:free'}`,
         'info',
       );
-      setFetchProgress({ phase: 'analyzing', current: 0, total: issuesToAnalyze.length });
+
+      setFetchProgress({
+        phase: 'analyzing',
+        current: 0,
+        total: issuesToAnalyze.length,
+      });
 
       const analyses = await analyzeAllIssues(
         issuesToAnalyze,
         (current, total) => {
-          setFetchProgress({ current, total, phase: 'analyzing' });
+          setFetchProgress({
+            current,
+            total,
+            phase: 'analyzing',
+          });
         },
         (msg) => {
           addLog(
@@ -90,6 +112,7 @@ export function useIssueAnalysis() {
       // Save analyses to history
       try {
         await historyService.updateHistoryAnalyses(owner, repo, analyses);
+
         addLog('✓ Analyses saved to history', 'success');
       } catch {
         addLog('Warning: Failed to save analyses to history', 'warning');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../hooks/useTheme';
 import { Button } from '../components/ui/Button';
 import { ScreenLayout } from '../components/layout/ScreenLayout';
 import { useAppStore } from '../store/appStore';
@@ -13,6 +14,8 @@ import {
   Save,
   Check,
   Loader2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { CONFIG } from '../lib/constants';
 import { historyService } from '../lib/history/historyService';
@@ -201,9 +204,32 @@ export function InputScreen() {
   };
 
   const recentHistory = history.slice(0, 3);
-
+  const { theme, toggleTheme } = useTheme();
   return (
     <ScreenLayout centered>
+      {/* Theme toggle — fixed top-right */}
+      <button
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '24px',
+          zIndex: 10,
+          background: 'none',
+          border: '1px solid var(--border-subtle)',
+          color: 'var(--text-muted)',
+          cursor: 'pointer',
+          borderRadius: '4px',
+          padding: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          fontFamily: 'var(--font-mono)',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+      </button>
       {/* Grid Background */}
       <div
         style={{

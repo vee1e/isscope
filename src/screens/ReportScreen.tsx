@@ -1,3 +1,4 @@
+import { useTheme } from '../hooks/useTheme';
 import React, { useMemo, useCallback } from 'react';
 import { SplitPane } from '../components/layout/SplitPane';
 import { IssueList } from '../components/issue/IssueList';
@@ -7,7 +8,7 @@ import { useAppStore } from '../store/appStore';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import type { RankedIssue } from '../lib/types';
 import { Button } from '../components/ui/Button';
-import { Download, RotateCcw } from 'lucide-react';
+import { Download, RotateCcw, Sun, Moon } from 'lucide-react';
 import { parseRepoInput } from '../lib/utils/validators';
 import { exportToMarkdown, downloadMarkdown } from '../lib/utils/exporters';
 
@@ -67,6 +68,7 @@ export function ReportScreen() {
   }, [filteredIssues, selectedIssueId]);
 
   const { repoInput, reset } = useAppStore();
+  const { theme, toggleTheme } = useTheme();
 
   // Header actions
   const handleExport = useCallback(() => {
@@ -93,6 +95,9 @@ export function ReportScreen() {
           Report: {repoInput}
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
+          <Button variant="ghost" size="sm" onClick={toggleTheme} title="Toggle theme">
+            {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+          </Button>
           <Button variant="ghost" size="sm" onClick={handleExport} title="Export Markdown report">
             <Download size={13} /> Export
           </Button>
