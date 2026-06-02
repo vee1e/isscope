@@ -20,17 +20,17 @@ export function useIssueAnalysis() {
       const historyAnalysesResults = await Promise.all(
         issues.map(async (issue) => {
           const result = await historyService.shouldUseHistoryAnalysis(owner, repo, issue.number, issue);
-          return { issueNumber: issue.number, result };
+          return { issueNumber: issue.number, issue, result };
         })
       );
 
       const issuesToAnalyze = historyAnalysesResults
         .filter(({ result }) => !result.useHistory)
-        .map(({ issueNumber }) => issues.find((i) => i.number === issueNumber)!);
+        .map(({ issue }) => issue);
 
       const historyCount = issues.length - issuesToAnalyze.length;
       if (historyCount > 0) {
-        addLog(`✓ Using ${historyCount} previous analyses from history`, 'success');
+        addLog(`âœ“ Using ${historyCount} previous analyses from history`, 'success');
         // Apply history analyses
         for (const { issueNumber, result } of historyAnalysesResults) {
           if (result.useHistory && result.historyAnalysis) {
@@ -40,7 +40,7 @@ export function useIssueAnalysis() {
       }
 
       if (issuesToAnalyze.length === 0) {
-        addLog('✓ All analyses loaded from history', 'success');
+        addLog('âœ“ All analyses loaded from history', 'success');
         setScreen('report');
         return;
       }
@@ -60,11 +60,11 @@ export function useIssueAnalysis() {
         (msg) => {
           addLog(
             msg,
-            msg.startsWith('✓')
+            msg.startsWith('âœ“')
               ? 'success'
-              : msg.startsWith('✗')
+              : msg.startsWith('âœ—')
                 ? 'error'
-                : msg.startsWith('⏳')
+                : msg.startsWith('â³')
                   ? 'warning'
                   : 'info',
           );
@@ -80,12 +80,12 @@ export function useIssueAnalysis() {
       // Save analyses to history
       try {
         await historyService.updateHistoryAnalyses(owner, repo, analyses);
-        addLog('✓ Analyses saved to history', 'success');
+        addLog('âœ“ Analyses saved to history', 'success');
       } catch {
         addLog('Warning: Failed to save analyses to history', 'warning');
       }
 
-      addLog(`✓ Analysis complete: ${analyses.size} new, ${historyCount} from history`, 'success');
+      addLog(`âœ“ Analysis complete: ${analyses.size} new, ${historyCount} from history`, 'success');
 
       // Transition to report
       setScreen('report');
