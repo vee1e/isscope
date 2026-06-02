@@ -109,5 +109,3 @@ export function useIssueAnalysis() {
 
   return { analyzeIssues, cancel };
 }
-
-

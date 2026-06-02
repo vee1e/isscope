@@ -22,7 +22,7 @@ export function formatTimestamp(iso: string): string {
  * @returns A human-readable relative time string.
  */
 export function formatTimeAgo(ts: string | number): string {
-  const date = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+  const date = new Date(ts);
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   const intervals = [
     { label: 'y', seconds: 31536000 },
