@@ -10,5 +10,6 @@
 anasahhm
 aqilaziz
 eta7osc
+kir943
 -quick123-666 openclaw slop
 vee1e
