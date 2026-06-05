@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { HistoryScreen } from './HistoryScreen';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useAppStore } from '../store/appStore';
 import React from 'react';
 
@@ -26,7 +26,7 @@ describe('HistoryScreen', () => {
           metadata: {
             issueCount: 50,
             issuesActivity: { newIssuesPerDay: 5, lastIssueCreatedAt: Date.now() },
-            commentsActivity: { newCommentsPerDay: 10, lastCommentCreatedAt: Date.now() },
+            commentsActivity: { newCommentsPerDay: 12, lastCommentCreatedAt: Date.now() },
           },
         },
       ] as any,
@@ -35,6 +35,10 @@ describe('HistoryScreen', () => {
       deleteFromHistory: vi.fn(),
       clearAllHistory: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('renders history entries', () => {
@@ -68,11 +72,11 @@ describe('HistoryScreen', () => {
 
     expect(screen.getByText('[ Repository Details ]')).toBeInTheDocument();
     expect(screen.getByText('Total Issues')).toBeInTheDocument();
-    expect(screen.getAllByText('10')[0]).toBeInTheDocument(); // repo-1 issue count
+    expect(screen.getByText('10')).toBeInTheDocument(); // repo-1 issue count
   });
 
   it('calls clearAllHistory when clear all button is clicked and confirmed', () => {
-    window.confirm = vi.fn().mockReturnValue(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const clearAllMock = useAppStore.getState().clearAllHistory;
 
     render(<HistoryScreen />);

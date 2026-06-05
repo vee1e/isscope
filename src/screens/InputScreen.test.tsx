@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { InputScreen } from './InputScreen';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAppStore } from '../store/appStore';
@@ -133,12 +133,9 @@ describe('InputScreen', () => {
       fireEvent.click(recentItem);
     });
 
-    // Wait for async actions to complete
-    await act(async () => {
-      await Promise.resolve();
+    await waitFor(() => {
+      expect(historyMock).toHaveBeenCalledWith('test', 'recent');
+      expect(useAppStore.getState().currentScreen).toBe('report');
     });
-
-    expect(historyMock).toHaveBeenCalledWith('test', 'recent');
-    expect(useAppStore.getState().currentScreen).toBe('report');
   });
 });
