@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../hooks/useTheme';
 import { Button } from '../components/ui/Button';
 import { ScreenLayout } from '../components/layout/ScreenLayout';
 import { useAppStore } from '../store/appStore';
@@ -13,20 +14,12 @@ import {
   Save,
   Check,
   Loader2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { CONFIG } from '../lib/constants';
 import { historyService } from '../lib/history/historyService';
-
-function formatTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+import { formatTimeAgo } from '../lib/utils/formatters';
 
 // Storage keys for localStorage
 const STORAGE_KEY_GITHUB = 'isscope_github_token';
@@ -211,9 +204,32 @@ export function InputScreen() {
   };
 
   const recentHistory = history.slice(0, 3);
-
+  const { theme, toggleTheme } = useTheme();
   return (
     <ScreenLayout centered>
+      {/* Theme toggle — fixed top-right */}
+      <button
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '24px',
+          zIndex: 10,
+          background: 'none',
+          border: '1px solid var(--border-subtle)',
+          color: 'var(--text-muted)',
+          cursor: 'pointer',
+          borderRadius: '4px',
+          padding: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          fontFamily: 'var(--font-mono)',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+      </button>
       {/* Grid Background */}
       <div
         style={{

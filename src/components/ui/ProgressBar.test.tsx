@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { ProgressBar } from './ProgressBar';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
@@ -29,7 +29,14 @@ describe('ProgressBar component', () => {
 
   it('shows ETA when startTime is provided', () => {
     const startTime = Date.now();
-    render(<ProgressBar current={5} total={10} startTime={startTime} />);
-    expect(screen.getByText(/ETA:/)).toBeInTheDocument();
+    const { rerender } = render(<ProgressBar current={0} total={10} startTime={startTime} />);
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    rerender(<ProgressBar current={5} total={10} startTime={startTime} />);
+
+    expect(screen.getByText(/ETA: 5s/)).toBeInTheDocument();
   });
 });

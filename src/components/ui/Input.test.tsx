@@ -18,6 +18,9 @@ describe('Input component', () => {
   it('applies error styles when hasError is true', () => {
     render(<Input hasError data-testid="error-input" />);
     const input = screen.getByTestId('error-input');
-    expect(input.style.border).toContain('var(--status-error)');
+    // We use .style.borderColor directly instead of toHaveStyle because
+    // JSDOM's toHaveStyle matcher fails to resolve CSS variables for border properties
+    // and computes them to transparent/empty.
+    expect(input.style.borderColor).toBe('var(--status-error)');
   });
 });
