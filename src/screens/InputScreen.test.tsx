@@ -15,6 +15,7 @@ vi.mock('../hooks/useTheme', () => ({
 vi.mock('../lib/history/historyService', () => ({
   historyService: {
     getHistoryEntry: vi.fn(),
+    getAllHistory: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -103,14 +104,18 @@ describe('InputScreen', () => {
   });
 
   it('loads recent history correctly', async () => {
+    const mockHistory = [
+      {
+        key: 'test/recent',
+        fetchedAt: Date.now(),
+        metadata: { issueCount: 5 },
+      },
+    ];
+
+    vi.mocked(historyService.getAllHistory).mockResolvedValue(mockHistory as any);
     useAppStore.setState({
-      history: [
-        {
-          key: 'test/recent',
-          fetchedAt: Date.now(),
-          metadata: { issueCount: 5 },
-        },
-      ] as any,
+      history: mockHistory as any,
+      loadHistory: vi.fn(),
     });
 
     render(<InputScreen />);

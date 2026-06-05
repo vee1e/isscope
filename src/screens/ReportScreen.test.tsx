@@ -55,24 +55,22 @@ describe('ReportScreen', () => {
   beforeEach(() => {
     useAppStore.getState().reset();
     useAppStore.getState().setRepoInput('test/repo');
-    useAppStore
-      .getState()
-      .setIssues([
-        {
-          number: 1,
-          title: 'First Issue',
-          user: { login: 'u1' },
-          labels: [{ name: 'bug' }],
-          body: 'body 1',
-        } as any,
-        {
-          number: 2,
-          title: 'Second Issue',
-          user: { login: 'u2' },
-          labels: [{ name: 'enhancement' }],
-          body: 'body 2',
-        } as any,
-      ]);
+    useAppStore.getState().setIssues([
+      {
+        number: 1,
+        title: 'First Issue',
+        user: { login: 'u1' },
+        labels: [{ name: 'bug' }],
+        body: 'body 1',
+      } as any,
+      {
+        number: 2,
+        title: 'Second Issue',
+        user: { login: 'u2' },
+        labels: [{ name: 'enhancement' }],
+        body: 'body 2',
+      } as any,
+    ]);
     useAppStore.getState().setAnalyses(
       new Map([
         [1, { doability_score: 90, summary: 'easy' } as any],
