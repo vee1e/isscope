@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useAppStore } from './appStore';
 import { historyService } from '../lib/history/historyService';
+import { CONFIG } from '../lib/constants';
 
 describe('useAppStore (Zustand Global State)', () => {
   beforeEach(() => {
@@ -67,9 +68,9 @@ describe('useAppStore (Zustand Global State)', () => {
       useAppStore.getState().setMaxIssues(10);
       expect(useAppStore.getState().maxIssues).toBe(10);
 
-      // Set too low (below MIN_MAX_ISSUES, which is likely 1 or 5)
+      // Set too low (below MIN_MAX_ISSUES)
       useAppStore.getState().setMaxIssues(-5);
-      expect(useAppStore.getState().maxIssues).toBe(1); // Or the specific CONFIG.MIN_MAX_ISSUES value
+      expect(useAppStore.getState().maxIssues).toBe(CONFIG.MIN_MAX_ISSUES);
     });
 
     it('sets fetch progress correctly', () => {
