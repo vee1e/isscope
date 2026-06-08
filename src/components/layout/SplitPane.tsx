@@ -79,6 +79,7 @@ export function SplitPane({
       {/* Divider */}
       <div
         onMouseDown={handleMouseDown}
+        data-testid="split-pane-divider"
         style={{
           width: '1px',
           background: 'var(--border)',
