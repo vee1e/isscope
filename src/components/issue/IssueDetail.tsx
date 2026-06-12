@@ -130,7 +130,8 @@ export function IssueDetail({ issue }: IssueDetailProps) {
               <Calendar size={11} /> {formatTimestamp(issue.created_at)}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <MessageSquare size={11} /> {issue.comments_count} comments
+              <MessageSquare size={11} /> {issue.comments_count}{' '}
+              {issue.comments_count === 1 ? 'comment' : 'comments'}
             </span>
             <span>Updated {formatTimeAgo(issue.updated_at)}</span>
           </div>
