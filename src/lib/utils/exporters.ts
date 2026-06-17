@@ -48,7 +48,7 @@ export function exportToMarkdown(issues: RankedIssue[], repoName: string): strin
         `- **Newcomer Friendliness**: ${friendlinessLabel(a.newcomer_friendliness)} (${a.newcomer_friendliness}/5)`,
         `- **Skills Required**: ${a.skills_required.join(', ') || 'none'}`,
         `- **Actionable Code Change**: ${a.is_actionable_code_change ? 'Yes' : 'No'}`,
-        a.not_mergeable_reason ? `- **Merge Blocker**: ${a.not_mergeable_reason}` : '',
+        a.not_mergeable_reason && `- **Merge Blocker**: ${a.not_mergeable_reason}`,
         ``,
         `> ${a.summary}`,
         ``,
@@ -60,7 +60,7 @@ export function exportToMarkdown(issues: RankedIssue[], repoName: string): strin
     lines.push('---', '');
   }
 
-  return lines.filter((l) => l !== undefined).join('\n');
+  return lines.filter(Boolean).join('\n');
 }
 
 export function downloadMarkdown(content: string, filename: string): void {
