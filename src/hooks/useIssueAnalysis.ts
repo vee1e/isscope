@@ -23,28 +23,20 @@ export function useIssueAnalysis() {
 
       const issuesToAnalyze: Issue[] = [];
 
-      const historyAnalysesResults: Array<{
-        issueNumber: number;
-        result: Awaited<ReturnType<typeof historyService.shouldUseHistoryAnalysis>>;
-      }> = [];
-
-      for (const issue of issues) {
-        const historyResult = await historyService.shouldUseHistoryAnalysis(
-          owner,
-          repo,
-          issue.number,
-          issue,
-        );
-
-        historyAnalysesResults.push({
-          issueNumber: issue.number,
-          result: historyResult,
-        });
-
-        if (!historyResult.useHistory) {
-          issuesToAnalyze.push(issue);
-        }
-      }
+      const historyAnalysesResults = await Promise.all(
+        issues.map(async (issue) => {
+          const result = await historyService.shouldUseHistoryAnalysis(
+            owner,
+            repo,
+            issue.number,
+            issue,
+          );
+          if (!result.useHistory) {
+            issuesToAnalyze.push(issue);
+          }
+          return { issueNumber: issue.number, result };
+        })
+      );
 
       const historyCount = issues.length - issuesToAnalyze.length;
 
