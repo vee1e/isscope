@@ -60,7 +60,7 @@ export function exportToMarkdown(issues: RankedIssue[], repoName: string): strin
     lines.push('---', '');
   }
 
-  return lines.filter((l) => l !== undefined).join('\n');
+  return lines.filter(Boolean).join('\n');
 }
 
 export function downloadMarkdown(content: string, filename: string): void {
