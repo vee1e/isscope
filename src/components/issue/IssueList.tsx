@@ -172,6 +172,11 @@ export function IssueList({
               fontFamily: 'var(--font-mono)',
             }}
           >
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', opacity: 0.4, display: 'block' }}>
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+              <line x1="8" y1="11" x2="14" y2="11" />
+            </svg>
             {searchQuery ? 'No issues match your search.' : 'No issues found.'}
           </div>
         ) : (
