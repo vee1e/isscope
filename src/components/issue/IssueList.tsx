@@ -21,29 +21,49 @@ export function IssueList({
   onSelect,
   selectedIndex,
 }: IssueListProps) {
-  const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return issues;
-    const q = searchQuery.toLowerCase();
-    return issues.filter(
-      (issue) =>
-        issue.title.toLowerCase().includes(q) ||
-        issue.labels.some((l) => l.name.toLowerCase().includes(q)) ||
-        (issue.body && issue.body.toLowerCase().includes(q)) ||
-        `#${issue.number}`.includes(q),
-    );
-  }, [issues, searchQuery]);
-
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const trapRef = React.useRef<HTMLInputElement>(null);
+  const trapRef = React.useRef<HTMLDivElement>(null);
+  const filtered = useMemo(
+    () =>
+      searchQuery
+        ? issues.filter((i) =>
+            i.title.toLowerCase().includes(searchQuery.toLowerCase()),
+          )
+        : issues,
+    [issues, searchQuery],
+  );
 
-  // Focus trap on mount
+  // Auto-blur search on mount
   React.useEffect(() => {
-    // Short timeout to ensure render
-    const timer = setTimeout(() => {
-      trapRef.current?.focus();
-    }, 50);
+    const timer = setTimeout(() => inputRef.current?.blur(), 0);
     return () => clearTimeout(timer);
   }, []);
+
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const handleKv = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+      if (e.key === '/' && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+      if (e.key === 'j' && filtered.length > 0) {
+        e.preventDefault();
+        const idx = selectedIndex < filtered.length - 1 ? selectedIndex + 1 : 0;
+        onSelect(filtered[idx].number);
+      }
+      if (e.key === 'k' && filtered.length > 0) {
+        e.preventDefault();
+        const idx = selectedIndex > 0 ? selectedIndex - 1 : filtered.length - 1;
+        onSelect(filtered[idx].number);
+      }
+    };
+    window.addEventListener('keydown', handleKv);
+    return () => window.removeEventListener('keydown', handleKv);
+  }, [filtered, selectedIndex, onSelect]);
 
   // Keyboard shortcuts
   React.useEffect(() => {
