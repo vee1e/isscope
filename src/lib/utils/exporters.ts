@@ -72,3 +72,27 @@ export function downloadMarkdown(content: string, filename: string): void {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export function exportToCSV(issues: RankedIssue[], repoName: string): string {
+  const header = 'Rank,Issue #,Title,Score,Status,Complexity,Newcomer Friendliness,Skills Required,URL';
+  const rows = issues.map((issue, i) => {
+    const a = issue.analysis;
+    const title = `"${issue.title.replace(/"/g, '""')}"`;
+    const status = a ? statusLabel(a.status) : '—';
+    const complexity = a ? complexityLabel(a.complexity) : '—';
+    const friendliness = a ? friendlinessLabel(a.newcomer_friendliness) : '—';
+    const skills = a ? a.skills_required.join('; ') : '';
+    return [i + 1, `#${issue.number}`, title, issue.score, status, complexity, friendliness, `"${skills}"`, issue.html_url].join(',');
+  });
+  return [header, ...rows].join('\n');
+}
+
+export function downloadCSV(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

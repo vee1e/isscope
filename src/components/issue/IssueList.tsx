@@ -198,6 +198,11 @@ export function IssueList({
               <line x1="8" y1="11" x2="14" y2="11" />
             </svg>
             {searchQuery ? 'No issues match your search.' : 'No issues found.'}
+            <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.5 }}>
+              {searchQuery
+                ? 'Try a different keyword or clear the search.'
+                : 'This repo may have no open issues or they were all filtered.'}
+            </div>
           </div>
         ) : (
           filtered.map((issue, index) => (

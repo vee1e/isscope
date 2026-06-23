@@ -17,7 +17,7 @@ function App() {
       try {
         const fetchedIssues = await fetchIssues(forceRefresh);
         if (!fetchedIssues || fetchedIssues.length === 0) {
-          addLog('No issues found. Returning to input.', 'warning');
+          addLog('This repo has no open, unlinked issues. Try another repository.', 'warning');
           setScreen('input');
           return;
         }

@@ -8,9 +8,9 @@ import { useAppStore } from '../store/appStore';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import type { RankedIssue } from '../lib/types';
 import { Button } from '../components/ui/Button';
-import { Download, RotateCcw, Sun, Moon } from 'lucide-react';
+import { Download, RotateCcw, Sun, Moon, FileSpreadsheet } from 'lucide-react';
 import { parseRepoInput } from '../lib/utils/validators';
-import { exportToMarkdown, downloadMarkdown } from '../lib/utils/exporters';
+import { exportToMarkdown, downloadMarkdown, exportToCSV, downloadCSV } from '../lib/utils/exporters';
 
 export function ReportScreen() {
   const { getRankedIssues, selectedIssueId, selectIssue, searchQuery, setSearchQuery } =
@@ -71,12 +71,20 @@ export function ReportScreen() {
   const { theme, toggleTheme } = useTheme();
 
   // Header actions
-  const handleExport = useCallback(() => {
+  const handleExportMD = useCallback(() => {
     const ranked = getRankedIssues();
     const { owner, repo } = parseRepoInput(repoInput);
     const md = exportToMarkdown(ranked, `${owner}/${repo}`);
     downloadMarkdown(md, `isscope-report-${owner}-${repo}.md`);
     useAppStore.getState().addLog('Report exported as Markdown.', 'success');
+  }, [getRankedIssues, repoInput]);
+
+  const handleExportCSV = useCallback(() => {
+    const ranked = getRankedIssues();
+    const { owner, repo } = parseRepoInput(repoInput);
+    const csv = exportToCSV(ranked, `${owner}/${repo}`);
+    downloadCSV(csv, `isscope-report-${owner}-${repo}.csv`);
+    useAppStore.getState().addLog('Report exported as CSV.', 'success');
   }, [getRankedIssues, repoInput]);
 
   return (
@@ -98,8 +106,11 @@ export function ReportScreen() {
           <Button variant="ghost" size="sm" onClick={toggleTheme} title="Toggle theme">
             {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleExport} title="Export Markdown report">
-            <Download size={13} /> Export
+          <Button variant="ghost" size="sm" onClick={handleExportMD} title="Export Markdown report">
+            <Download size={13} /> MD
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleExportCSV} title="Export CSV report">
+            <FileSpreadsheet size={13} /> CSV
           </Button>
           <Button variant="ghost" size="sm" onClick={reset} title="New analysis">
             <RotateCcw size={13} /> New

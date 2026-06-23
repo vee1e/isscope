@@ -717,6 +717,19 @@ export function InputScreen() {
                   Remember API keys
                 </label>
 
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--status-warning)',
+                    padding: '4px 8px',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '4px',
+                    marginTop: '4px',
+                  }}
+                >
+                  ⚠ Keys are stored in plain text in localStorage. Only enable on trusted devices.
+                </div>
+
                 <Button
                   onClick={handleSaveApiKeys}
                   disabled={saveStatus === 'saving' || saveStatus === 'saved'}
