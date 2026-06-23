@@ -1,7 +1,7 @@
 # IsScope
 
 <div align="center">
-<p align="centre">
+<p align="center">
   <img src="https://img.shields.io/github/issues-pr-closed-raw/vee1e/isscope?style=for-the-badge" />
   <img src="https://img.shields.io/github/issues-closed-raw/vee1e/isscope?style=for-the-badge" />
   <img src="https://img.shields.io/github/contributors/vee1e/isscope?style=for-the-badge" />
@@ -14,6 +14,17 @@
 IssueScope is a tool for triaging GitHub issues using AI. It analyzes issues to determine their implementation difficulty, required skills, and overall doability, helping contributors find the right issues to work on.
 
 </div>
+
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [Local Setup Instructions](#local-setup-instructions)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [Contact Channel](#contact-channel)
+- [License](#license)
 
 <img width="1024" height="1536" alt="Poster" src="https://github.com/user-attachments/assets/362347c7-9a0c-4642-abbe-5e240769f9b9" />
 
@@ -80,11 +91,23 @@ The application requires API keys to function. You can configure these directly 
 
 ## Usage
 
+### Web Interface
+
 1. Enter a GitHub repository (e.g., `owner/repo`) or a full URL in the input field.
 2. Click "Configure API Keys" to enter your credentials if you haven't already.
 3. Start the analysis.
 4. Browse the ranked list of issues.
 5. Select an issue to view its full details, including the AI-generated summary and implementation advice.
+
+### CLI / Dev Commands
+
+| Command | Description |
+|---------|-------------|
+| `bun dev` | Start the development server |
+| `bun build` | Build for production |
+| `bun preview` | Preview the production build |
+| `bun lint` | Run ESLint |
+| `bun run check` | Type-check with TypeScript |
 
 ## Contributing
 
