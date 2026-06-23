@@ -3,6 +3,7 @@ import { ScrollArea } from '../ui/ScrollArea';
 import { IssueListItem } from './IssueListItem';
 import { Search } from 'lucide-react';
 import type { RankedIssue } from '../../lib/types';
+import { modifierLabel, modifierKey } from '../../lib/utils/platform';
 
 interface IssueListProps {
   issues: RankedIssue[];
@@ -166,7 +167,7 @@ export function IssueList({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          placeholder="Search issues... [Cmd+K]"
+          placeholder={`Search issues... [${modifierLabel()}+K]`}
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-xs)',
@@ -229,7 +230,7 @@ export function IssueList({
           background: 'var(--bg-tertiary)',
         }}
       >
-        [j/k] Nav [Enter] Sel [Cmd+K] Search
+        [j/k] Nav [Enter] Sel [{modifierKey()}+K] Search
       </div>
     </div>
   );

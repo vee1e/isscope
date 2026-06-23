@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { ScreenLayout } from '../components/layout/ScreenLayout';
 import { useAppStore } from '../store/appStore';
 import { validateRepoInput, parseRepoInput } from '../lib/utils/validators';
+import { modifierLabel } from '../lib/utils/platform';
 import {
   Github,
   Settings,
@@ -334,7 +335,7 @@ export function InputScreen() {
               onChange={handleChange}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder="owner/repo [Cmd+K]"
+              placeholder={`owner/repo [${modifierLabel()}+K]`}
               disabled={submitted || isLoadingFromHistory}
               style={{
                 width: '100%',

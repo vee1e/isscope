@@ -29,7 +29,7 @@ describe('InputScreen', () => {
   it('renders input screen and allows typing', () => {
     render(<InputScreen />);
 
-    const input = screen.getByPlaceholderText('owner/repo [Cmd+K]');
+    const input = screen.getByPlaceholderText(/owner\/repo \[/);
     expect(input).toBeInTheDocument();
 
     act(() => {
@@ -42,7 +42,7 @@ describe('InputScreen', () => {
   it('validates repository format before submission', () => {
     render(<InputScreen />);
 
-    const input = screen.getByPlaceholderText('owner/repo [Cmd+K]');
+    const input = screen.getByPlaceholderText(/owner\/repo \[/);
     const submitBtn = screen.getByRole('button', { name: /Start Analysis/i });
 
     expect(submitBtn).toBeDisabled();
@@ -63,7 +63,7 @@ describe('InputScreen', () => {
   it('submits valid repository and changes screen', () => {
     render(<InputScreen />);
 
-    const input = screen.getByPlaceholderText('owner/repo [Cmd+K]');
+    const input = screen.getByPlaceholderText(/owner\/repo \[/);
     const submitBtn = screen.getByRole('button', { name: /Start Analysis/i });
 
     act(() => {
