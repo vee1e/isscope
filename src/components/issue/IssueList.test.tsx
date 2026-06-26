@@ -71,7 +71,7 @@ describe('IssueList component', () => {
     expect(onSearchChange).toHaveBeenCalledWith('routing');
   });
 
-  it('filters issues based on searchQuery prop', () => {
+  it('renders all provided issues regardless of searchQuery prop', () => {
     render(
       <IssueList
         issues={mockIssues}
@@ -83,9 +83,10 @@ describe('IssueList component', () => {
       />,
     );
 
+    // Should render all mockIssues because IssueList is now a pure presentation component
     expect(screen.getByText('Bug in routing')).toBeInTheDocument();
-    expect(screen.queryByText('Style updates for login page')).not.toBeInTheDocument();
-    expect(screen.getByText('1 items')).toBeInTheDocument();
+    expect(screen.getByText('Style updates for login page')).toBeInTheDocument();
+    expect(screen.getByText('2 items')).toBeInTheDocument();
   });
 
   it('triggers onSelect when an issue item is clicked', () => {
@@ -105,10 +106,10 @@ describe('IssueList component', () => {
     expect(onSelect).toHaveBeenCalledWith(2);
   });
 
-  it('shows no issues found message when filtered list is empty', () => {
+  it('shows no issues found message when provided issues list is empty', () => {
     render(
       <IssueList
-        issues={mockIssues}
+        issues={[]}
         selectedId={1}
         searchQuery="xyz"
         onSearchChange={vi.fn()}

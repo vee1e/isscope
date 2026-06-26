@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { ScrollArea } from '../ui/ScrollArea';
 import { IssueListItem } from './IssueListItem';
 import { Search } from 'lucide-react';
@@ -21,18 +21,6 @@ export function IssueList({
   onSelect,
   selectedIndex,
 }: IssueListProps) {
-  const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return issues;
-    const q = searchQuery.toLowerCase();
-    return issues.filter(
-      (issue) =>
-        issue.title.toLowerCase().includes(q) ||
-        issue.labels.some((l) => l.name.toLowerCase().includes(q)) ||
-        (issue.body && issue.body.toLowerCase().includes(q)) ||
-        `#${issue.number}`.includes(q),
-    );
-  }, [issues, searchQuery]);
-
   const inputRef = React.useRef<HTMLInputElement>(null);
   const trapRef = React.useRef<HTMLInputElement>(null);
 
@@ -72,13 +60,13 @@ export function IssueList({
   // Auto-scroll to selected item
   React.useEffect(() => {
     // ... (existing scroll logic)
-    if (selectedIndex >= 0 && filtered.length > 0) {
+    if (selectedIndex >= 0 && issues.length > 0) {
       const el = document.getElementById(`issue-${selectedIndex}`);
       if (el) {
         el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     }
-  }, [selectedIndex, filtered]);
+  }, [selectedIndex, issues]);
 
   return (
     <div
@@ -126,7 +114,7 @@ export function IssueList({
         }}
       >
         <span>[ Issues (ranked by doability) ]</span>
-        <span style={{ color: 'var(--text-dim)' }}>{filtered.length} items</span>
+        <span style={{ color: 'var(--text-dim)' }}>{issues.length} items</span>
       </div>
 
       {/* Search */}
@@ -162,7 +150,7 @@ export function IssueList({
 
       {/* Issue list */}
       <ScrollArea style={{ flex: 1 }}>
-        {filtered.length === 0 ? (
+        {issues.length === 0 ? (
           <div
             style={{
               padding: '20px 12px',
@@ -175,7 +163,7 @@ export function IssueList({
             {searchQuery ? 'No issues match your search.' : 'No issues found.'}
           </div>
         ) : (
-          filtered.map((issue, index) => (
+          issues.map((issue, index) => (
             <IssueListItem
               key={issue.number}
               id={`issue-${index}`}

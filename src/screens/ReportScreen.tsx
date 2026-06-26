@@ -1,5 +1,5 @@
 import { useTheme } from '../hooks/useTheme';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useDeferredValue } from 'react';
 import { SplitPane } from '../components/layout/SplitPane';
 import { IssueList } from '../components/issue/IssueList';
 import { IssueDetail } from '../components/issue/IssueDetail';
@@ -18,10 +18,12 @@ export function ReportScreen() {
 
   const rankedIssues = getRankedIssues();
 
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
   // Filter by search
   const filteredIssues = useMemo(() => {
-    if (!searchQuery.trim()) return rankedIssues;
-    const q = searchQuery.toLowerCase();
+    if (!deferredSearchQuery.trim()) return rankedIssues;
+    const q = deferredSearchQuery.toLowerCase();
     return rankedIssues.filter(
       (issue) =>
         issue.title.toLowerCase().includes(q) ||
@@ -29,7 +31,7 @@ export function ReportScreen() {
         (issue.body && issue.body.toLowerCase().includes(q)) ||
         `#${issue.number}`.includes(q),
     );
-  }, [rankedIssues, searchQuery]);
+  }, [rankedIssues, deferredSearchQuery]);
 
   // Keyboard navigation
   const handleNavSelect = useCallback(
