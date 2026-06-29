@@ -97,6 +97,22 @@ export interface RankedIssue extends Issue {
   score: number;
 }
 
+// ── AI Provider Types ──────────────────────────────
+
+export type AIProvider = 'openrouter' | 'local';
+
+export interface LocalProviderConfig {
+  endpoint: string;
+  model: string;
+  apiKey?: string;
+}
+
+export interface AIProviderConfig {
+  provider: AIProvider;
+  openRouterKey?: string;
+  local?: LocalProviderConfig;
+}
+
 // ── History Types ───────────────────────────────────
 
 export interface HistoryMetadata {

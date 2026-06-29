@@ -16,14 +16,20 @@ import {
   Loader2,
   Sun,
   Moon,
+  Server,
 } from 'lucide-react';
 import { CONFIG } from '../lib/constants';
 import { historyService } from '../lib/history/historyService';
 import { formatTimeAgo } from '../lib/utils/formatters';
+import type { AIProvider } from '../lib/types';
 
 // Storage keys for localStorage
 const STORAGE_KEY_GITHUB = 'isscope_github_token';
 const STORAGE_KEY_OPENROUTER = 'isscope_openrouter_key';
+const STORAGE_KEY_AI_PROVIDER = 'isscope_ai_provider';
+const STORAGE_KEY_LOCAL_ENDPOINT = 'isscope_local_endpoint';
+const STORAGE_KEY_LOCAL_MODEL = 'isscope_local_model';
+const STORAGE_KEY_LOCAL_API_KEY = 'isscope_local_api_key';
 const STORAGE_KEY_MAX_ISSUES = 'isscope_max_issues';
 const STORAGE_KEY_REMEMBER_KEYS = 'isscope_remember_keys';
 
@@ -44,6 +50,12 @@ export function InputScreen() {
     setAnalyses,
     setScreen,
     addLog,
+    aiProvider,
+    setAiProvider,
+    localEndpoint,
+    localModel,
+    localApiKey,
+    setLocalConfig,
   } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -54,6 +66,10 @@ export function InputScreen() {
   // Local state for API key inputs
   const [localGithubToken, setLocalGithubToken] = useState(githubToken);
   const [localOpenRouterKey, setLocalOpenRouterKey] = useState(openRouterKey);
+  const [localProvider, setLocalProvider] = useState<AIProvider>(aiProvider);
+  const [localEndpointInput, setLocalEndpointInput] = useState(localEndpoint);
+  const [localModelInput, setLocalModelInput] = useState(localModel);
+  const [localApiKeyInput, setLocalApiKeyInput] = useState(localApiKey);
   const [localMaxIssues, setLocalMaxIssues] = useState(maxIssues);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [rememberKeys, setRememberKeys] = useState(false);
@@ -67,6 +83,12 @@ export function InputScreen() {
     const storedOpenRouter = shouldRemember
       ? localStorage.getItem(STORAGE_KEY_OPENROUTER) || ''
       : '';
+    const storedProvider = localStorage.getItem(STORAGE_KEY_AI_PROVIDER) as AIProvider | null;
+    const storedEndpoint = localStorage.getItem(STORAGE_KEY_LOCAL_ENDPOINT);
+    const storedModel = localStorage.getItem(STORAGE_KEY_LOCAL_MODEL);
+    const storedLocalApiKey = shouldRemember
+      ? localStorage.getItem(STORAGE_KEY_LOCAL_API_KEY) || ''
+      : '';
     const storedMaxIssues = localStorage.getItem(STORAGE_KEY_MAX_ISSUES);
 
     setRememberKeys(shouldRemember);
@@ -77,6 +99,22 @@ export function InputScreen() {
         openRouterKey: storedOpenRouter,
       });
     }
+
+    if (storedProvider === 'openrouter' || storedProvider === 'local') {
+      setAiProvider(storedProvider);
+      setLocalProvider(storedProvider);
+    }
+
+    if (storedEndpoint || storedModel || storedLocalApiKey) {
+      setLocalConfig({
+        endpoint: storedEndpoint || undefined,
+        model: storedModel || undefined,
+        apiKey: storedLocalApiKey || undefined,
+      });
+    }
+    if (storedEndpoint) setLocalEndpointInput(storedEndpoint);
+    if (storedModel) setLocalModelInput(storedModel);
+    if (storedLocalApiKey) setLocalApiKeyInput(storedLocalApiKey);
 
     if (storedMaxIssues) {
       const parsed = parseInt(storedMaxIssues, 10);
@@ -95,7 +133,7 @@ export function InputScreen() {
         setLocalMaxIssues(parsed);
       }
     }
-  }, [setApiKeys, setMaxIssues]);
+  }, [setApiKeys, setMaxIssues, setAiProvider, setLocalConfig]);
 
   useEffect(() => {
     loadHistory();
@@ -151,13 +189,18 @@ export function InputScreen() {
     if (rememberKeys) {
       localStorage.setItem(STORAGE_KEY_GITHUB, localGithubToken);
       localStorage.setItem(STORAGE_KEY_OPENROUTER, localOpenRouterKey);
+      localStorage.setItem(STORAGE_KEY_LOCAL_API_KEY, localApiKeyInput);
       localStorage.setItem(STORAGE_KEY_REMEMBER_KEYS, 'true');
     } else {
       localStorage.removeItem(STORAGE_KEY_GITHUB);
       localStorage.removeItem(STORAGE_KEY_OPENROUTER);
+      localStorage.removeItem(STORAGE_KEY_LOCAL_API_KEY);
       localStorage.setItem(STORAGE_KEY_REMEMBER_KEYS, 'false');
     }
 
+    localStorage.setItem(STORAGE_KEY_AI_PROVIDER, localProvider);
+    localStorage.setItem(STORAGE_KEY_LOCAL_ENDPOINT, localEndpointInput);
+    localStorage.setItem(STORAGE_KEY_LOCAL_MODEL, localModelInput);
     localStorage.setItem(STORAGE_KEY_MAX_ISSUES, localMaxIssues.toString());
 
     setApiKeys({
@@ -165,6 +208,12 @@ export function InputScreen() {
       openRouterKey: localOpenRouterKey,
     });
 
+    setAiProvider(localProvider);
+    setLocalConfig({
+      endpoint: localEndpointInput,
+      model: localModelInput,
+      apiKey: localApiKeyInput,
+    });
     setMaxIssues(localMaxIssues);
 
     setTimeout(() => {
@@ -646,6 +695,199 @@ export function InputScreen() {
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      color: 'var(--text-muted)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    AI Provider
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '6px',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '8px',
+                      padding: '4px',
+                    }}
+                  >
+                    {(
+                      [
+                        { value: 'openrouter', label: 'OpenRouter' },
+                        { value: 'local', label: 'Local (Ollama / LMStudio)' },
+                      ] as { value: AIProvider; label: string }[]
+                    ).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setLocalProvider(opt.value);
+                          setSaveStatus('idle');
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '8px 10px',
+                          fontSize: '12px',
+                          fontFamily: 'var(--font-mono)',
+                          background: localProvider === opt.value ? 'var(--text)' : 'transparent',
+                          color: localProvider === opt.value ? 'var(--bg)' : 'var(--text-muted)',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {localProvider === 'local' && (
+                  <>
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          color: 'var(--text-muted)',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Local Endpoint (Ollama: http://localhost:11434/v1 · LMStudio:
+                        http://localhost:1234/v1)
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="text"
+                          value={localEndpointInput}
+                          onChange={(e) => {
+                            setLocalEndpointInput(e.target.value);
+                            setSaveStatus('idle');
+                          }}
+                          placeholder={CONFIG.DEFAULT_LOCAL_ENDPOINT}
+                          style={{
+                            width: '100%',
+                            padding: '10px 10px 10px 36px',
+                            fontSize: '13px',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: '8px',
+                            color: 'var(--text)',
+                            fontFamily: 'var(--font-mono)',
+                            outline: 'none',
+                          }}
+                        />
+                        <Server
+                          size={14}
+                          style={{
+                            position: 'absolute',
+                            left: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'var(--text-dim)',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          color: 'var(--text-muted)',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Local Model Name
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="text"
+                          value={localModelInput}
+                          onChange={(e) => {
+                            setLocalModelInput(e.target.value);
+                            setSaveStatus('idle');
+                          }}
+                          placeholder={CONFIG.DEFAULT_LOCAL_MODEL}
+                          style={{
+                            width: '100%',
+                            padding: '10px 10px 10px 36px',
+                            fontSize: '13px',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: '8px',
+                            color: 'var(--text)',
+                            fontFamily: 'var(--font-mono)',
+                            outline: 'none',
+                          }}
+                        />
+                        <Server
+                          size={14}
+                          style={{
+                            position: 'absolute',
+                            left: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'var(--text-dim)',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          color: 'var(--text-muted)',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        Local API Key (optional — only if your server requires one)
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="password"
+                          value={localApiKeyInput}
+                          onChange={(e) => {
+                            setLocalApiKeyInput(e.target.value);
+                            setSaveStatus('idle');
+                          }}
+                          placeholder="lm-studio"
+                          style={{
+                            width: '100%',
+                            padding: '10px 10px 10px 36px',
+                            fontSize: '13px',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: '8px',
+                            color: 'var(--text)',
+                            fontFamily: 'var(--font-mono)',
+                            outline: 'none',
+                          }}
+                        />
+                        <Key
+                          size={14}
+                          style={{
+                            position: 'absolute',
+                            left: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'var(--text-dim)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label

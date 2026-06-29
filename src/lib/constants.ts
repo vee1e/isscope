@@ -8,6 +8,8 @@ export const CONFIG = {
   DEFAULT_MAX_ISSUES: 200,
   MIN_MAX_ISSUES: 10,
   MAX_MAX_ISSUES: 1000,
+  DEFAULT_LOCAL_ENDPOINT: import.meta.env.VITE_LOCAL_ENDPOINT || 'http://localhost:11434/v1',
+  DEFAULT_LOCAL_MODEL: import.meta.env.VITE_LOCAL_MODEL || 'llama3.2',
 } as const;
 
 export const REPO_REGEX = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/;

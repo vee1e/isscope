@@ -8,6 +8,7 @@ import type {
   LogType,
   RankedIssue,
   HistoryMetadata,
+  AIProvider,
 } from '../lib/types';
 import { historyService } from '../lib/history/historyService';
 import { CONFIG } from '../lib/constants';
@@ -30,6 +31,14 @@ interface AppState {
   githubToken: string;
   openRouterKey: string;
   setApiKeys: (keys: { githubToken?: string; openRouterKey?: string }) => void;
+
+  // AI Provider
+  aiProvider: AIProvider;
+  setAiProvider: (provider: AIProvider) => void;
+  localEndpoint: string;
+  localModel: string;
+  localApiKey: string;
+  setLocalConfig: (config: { endpoint?: string; model?: string; apiKey?: string }) => void;
 
   // Settings
   maxIssues: number;
@@ -95,6 +104,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   githubToken: '',
   openRouterKey: '',
   setApiKeys: (keys) => set((state) => ({ ...state, ...keys })),
+
+  // AI Provider
+  aiProvider: 'openrouter',
+  setAiProvider: (provider) => set({ aiProvider: provider }),
+  localEndpoint: CONFIG.DEFAULT_LOCAL_ENDPOINT,
+  localModel: CONFIG.DEFAULT_LOCAL_MODEL,
+  localApiKey: '',
+  setLocalConfig: (config) =>
+    set((state) => ({
+      localEndpoint: config.endpoint ?? state.localEndpoint,
+      localModel: config.model ?? state.localModel,
+      localApiKey: config.apiKey ?? state.localApiKey,
+    })),
 
   // Fetching Progress
   fetchProgress: { phase: 'fetching', current: 0, total: 0 },
