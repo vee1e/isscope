@@ -21,6 +21,7 @@ import {
 import { CONFIG } from '../lib/constants';
 import { historyService } from '../lib/history/historyService';
 import { formatTimeAgo } from '../lib/utils/formatters';
+import { testLocalConnection, type LocalConnectionTestResult } from '../lib/api/local';
 import type { AIProvider } from '../lib/types';
 
 // Storage keys for localStorage
@@ -73,6 +74,12 @@ export function InputScreen() {
   const [localMaxIssues, setLocalMaxIssues] = useState(maxIssues);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [rememberKeys, setRememberKeys] = useState(false);
+  const [connectionTest, setConnectionTest] = useState<
+    | { state: 'idle' }
+    | { state: 'testing' }
+    | { state: 'ok'; models: string[] }
+    | { state: 'error'; message: string }
+  >({ state: 'idle' });
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -160,6 +167,20 @@ export function InputScreen() {
     if (error) {
       const validation = validateRepoInput(value);
       if (validation.valid) setError(null);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setConnectionTest({ state: 'testing' });
+    const result: LocalConnectionTestResult = await testLocalConnection({
+      endpoint: localEndpointInput,
+      model: localModelInput,
+      apiKey: localApiKeyInput,
+    });
+    if (result.ok) {
+      setConnectionTest({ state: 'ok', models: result.models ?? [] });
+    } else {
+      setConnectionTest({ state: 'error', message: result.error || 'Unknown error' });
     }
   };
 
@@ -760,8 +781,7 @@ export function InputScreen() {
                           marginBottom: '6px',
                         }}
                       >
-                        Local Endpoint (Ollama: http://localhost:11434/v1 · LMStudio:
-                        http://localhost:1234/v1)
+                        Local Endpoint
                       </label>
                       <div style={{ position: 'relative' }}>
                         <input
@@ -770,11 +790,12 @@ export function InputScreen() {
                           onChange={(e) => {
                             setLocalEndpointInput(e.target.value);
                             setSaveStatus('idle');
+                            setConnectionTest({ state: 'idle' });
                           }}
-                          placeholder={CONFIG.DEFAULT_LOCAL_ENDPOINT}
+                          placeholder="http://localhost:11434/v1"
                           style={{
                             width: '100%',
-                            padding: '10px 10px 10px 36px',
+                            padding: '10px 90px 10px 36px',
                             fontSize: '13px',
                             background: 'var(--bg-tertiary)',
                             border: '1px solid var(--border-subtle)',
@@ -794,7 +815,85 @@ export function InputScreen() {
                             color: 'var(--text-dim)',
                           }}
                         />
+                        <button
+                          type="button"
+                          onClick={handleTestConnection}
+                          disabled={connectionTest.state === 'testing'}
+                          style={{
+                            position: 'absolute',
+                            right: '6px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            padding: '4px 10px',
+                            fontSize: '11px',
+                            fontFamily: 'var(--font-mono)',
+                            background: 'var(--text)',
+                            color: 'var(--bg)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: connectionTest.state === 'testing' ? 'wait' : 'pointer',
+                            opacity: connectionTest.state === 'testing' ? 0.7 : 1,
+                          }}
+                        >
+                          {connectionTest.state === 'testing' ? 'Testing…' : 'Test'}
+                        </button>
                       </div>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: 'var(--text-dim)',
+                          marginTop: '4px',
+                        }}
+                      >
+                        Must include the <code>/v1</code> path: Ollama →{' '}
+                        <code>http://localhost:11434/v1</code> · LMStudio →{' '}
+                        <code>http://localhost:1234/v1</code>
+                      </div>
+                      {connectionTest.state === 'ok' && (
+                        <div
+                          style={{
+                            fontSize: '11px',
+                            color: 'var(--status-success)',
+                            marginTop: '6px',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '4px',
+                          }}
+                        >
+                          <span>✓</span>
+                          <span>
+                            Connected.
+                            {connectionTest.models.length > 0 ? (
+                              <>
+                                {' '}
+                                {connectionTest.models.length} model
+                                {connectionTest.models.length === 1 ? '' : 's'} available
+                                {connectionTest.models.length <= 5 && (
+                                  <>: {connectionTest.models.join(', ')}</>
+                                )}
+                                .
+                              </>
+                            ) : (
+                              ' Server reachable.'
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {connectionTest.state === 'error' && (
+                        <div
+                          style={{
+                            fontSize: '11px',
+                            color: 'var(--status-error)',
+                            marginTop: '6px',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '4px',
+                          }}
+                        >
+                          <span>✗</span>
+                          <span>{connectionTest.message}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div>

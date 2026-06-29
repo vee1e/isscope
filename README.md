@@ -78,6 +78,20 @@ The application requires API keys to function. You can configure these directly 
 - **OpenRouter API Key**: Required for AI analysis.
 - **GitHub Token**: Optional, but recommended for higher API rate limits.
 
+### Local LLM provider (Ollama / LMStudio)
+
+You can run analysis against a local model served by [Ollama](https://ollama.com) or [LMStudio](https://lmstudio.ai) instead of OpenRouter — no API key required. Both expose an OpenAI-compatible `/v1/chat/completions` endpoint.
+
+1. **Start your local server.**
+   - **Ollama:** `ollama serve` (default endpoint: `http://localhost:11434/v1`). Pull a model first, e.g. `ollama pull llama3.2`.
+   - **LMStudio:** Open the "Local Server" tab and click Start Server (default endpoint: `http://localhost:1234/v1`).
+2. **Enable CORS** so the browser can call the server from this app:
+   - **LMStudio:** in the Local Server tab, click the ⚙ settings icon and enable **CORS**.
+   - **Ollama:** Ollama 0.1.14+ allows browser origins by default. For older versions, set the `OLLAMA_ORIGINS="*"` environment variable before starting the server.
+3. In the app, open **Configure API Keys → AI Provider → Local (Ollama / LMStudio)**, set the endpoint, model name, and (optionally) an API key, then click **Test** to verify the connection before saving.
+
+If you see `NetworkError when attempting to fetch resource` (Firefox) or `Failed to fetch` (Chrome) when starting an analysis, the server is unreachable or CORS is disabled — the in-app error message includes the exact fix for your server.
+
 ## Usage
 
 1. Enter a GitHub repository (e.g., `owner/repo`) or a full URL in the input field.
