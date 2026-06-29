@@ -1,7 +1,7 @@
 export const CONFIG = {
   GITHUB_API_BASE: 'https://api.github.com',
   OPENROUTER_API_BASE: 'https://openrouter.ai/api/v1',
-  DEFAULT_MODEL: import.meta.env.VITE_MODEL_NAME || 'arcee-ai/trinity-large-preview:free',
+  DEFAULT_MODEL: import.meta.env.VITE_MODEL_NAME || 'openai/gpt-oss-20b:free',
   MAX_CONCURRENT_REQUESTS: 5,
   RATE_LIMIT_BUFFER: 100,
   DEFAULT_PAGE_SIZE: 100,
