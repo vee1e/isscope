@@ -12,8 +12,10 @@ describe('ScreenLayout component', () => {
   it('applies centered styles when centered prop is true', () => {
     render(<ScreenLayout centered>Centered Content</ScreenLayout>);
 
-    // ScreenLayout wraps children in a div that gets centered styles
+    // ScreenLayout wraps children in a div that gets centered styles.
+    // Uses `safe center` so the content stays reachable from the top when
+    // it is taller than the viewport.
     const element = screen.getByText('Centered Content');
-    expect(element).toHaveStyle({ alignItems: 'center', justifyContent: 'center' });
+    expect(element).toHaveStyle({ alignItems: 'safe center', justifyContent: 'safe center' });
   });
 });

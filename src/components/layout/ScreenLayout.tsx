@@ -10,13 +10,13 @@ export function ScreenLayout({ children, centered = false }: ScreenLayoutProps) 
     <div
       style={{
         flex: 1,
-        overflow: 'hidden',
+        overflow: 'auto',
         display: 'flex',
         flexDirection: 'column',
         ...(centered
           ? {
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: 'safe center',
+              justifyContent: 'safe center',
             }
           : {}),
       }}
