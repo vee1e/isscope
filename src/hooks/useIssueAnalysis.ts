@@ -69,10 +69,7 @@ export function useIssueAnalysis() {
 
       addLog(`Analyzing ${issuesToAnalyze.length} issues with AI...`, 'info');
 
-      addLog(
-        `Model: ${import.meta.env.VITE_MODEL_NAME || 'arcee-ai/trinity-large-preview:free'}`,
-        'info',
-      );
+      addLog(`Model: ${import.meta.env.VITE_MODEL_NAME || 'openai/gpt-oss-20b:free'}`, 'info');
 
       setFetchProgress({
         phase: 'analyzing',
