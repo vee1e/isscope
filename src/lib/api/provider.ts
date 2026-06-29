@@ -1,0 +1,202 @@
+import { ANALYSIS_PROMPT, CONFIG } from '../constants';
+import { callOpenRouter } from './openrouter';
+import { callLocal, resolveLocalConfig } from './local';
+import { AnalysisResultSchema, type AnalysisResult, type Issue, type AIProvider } from '../types';
+import { useAppStore } from '../../store/appStore';
+
+function formatIssueForAnalysis(issue: Issue): string {
+  const parts = [
+    `# Issue #${issue.number}: ${issue.title}`,
+    ``,
+    `**Author**: ${issue.user.login}`,
+    `**Created**: ${issue.created_at}`,
+    `**Updated**: ${issue.updated_at}`,
+    `**Labels**: ${issue.labels.map((l) => l.name).join(', ') || 'none'}`,
+    `**Assignees**: ${issue.assignees.map((a) => a.login).join(', ') || 'none'}`,
+    `**Comment count**: ${issue.comments_count}`,
+    ``,
+    `## Body`,
+    issue.body || '(no description)',
+  ];
+
+  if (issue.comments && issue.comments.length > 0) {
+    parts.push('', '## Comments');
+    for (const comment of issue.comments.slice(0, 15)) {
+      parts.push(
+        ``,
+        `### @${comment.user.login} (${comment.created_at})`,
+        comment.body.slice(0, 500),
+      );
+    }
+  }
+
+  if (issue.timeline && issue.timeline.length > 0) {
+    parts.push('', '## Timeline Events');
+    const relevant = issue.timeline
+      .filter((e) => ['cross-referenced', 'referenced', 'labeled', 'assigned'].includes(e.event))
+      .slice(0, 10);
+    for (const event of relevant) {
+      parts.push(`- ${event.event} by ${event.actor?.login || 'unknown'} at ${event.created_at}`);
+    }
+  }
+
+  return parts.join('\n');
+}
+
+const DEFAULT_ANALYSIS: AnalysisResult = {
+  summary: 'Analysis could not be completed.',
+  status: 'active',
+  progress_estimate: 'not_started',
+  is_actionable_code_change: true,
+  not_mergeable_reason: null,
+  complexity: 3,
+  skills_required: [],
+  newcomer_friendliness: 3,
+  doability_score: 50,
+  analysis_notes: 'Fallback default — AI analysis failed or returned invalid data.',
+};
+
+function parseAnalysisResponse(raw: string): AnalysisResult {
+  try {
+    let jsonStr = raw.trim();
+
+    const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[1].trim();
+    }
+
+    const parsed = JSON.parse(jsonStr);
+    const validated = AnalysisResultSchema.parse(parsed);
+    return validated;
+  } catch {
+    try {
+      const parsed = JSON.parse(raw.trim());
+      return {
+        ...DEFAULT_ANALYSIS,
+        summary: parsed.summary || DEFAULT_ANALYSIS.summary,
+        doability_score:
+          typeof parsed.doability_score === 'number'
+            ? parsed.doability_score
+            : DEFAULT_ANALYSIS.doability_score,
+        complexity:
+          typeof parsed.complexity === 'number' ? parsed.complexity : DEFAULT_ANALYSIS.complexity,
+        skills_required: Array.isArray(parsed.skills_required) ? parsed.skills_required : [],
+        status: parsed.status || DEFAULT_ANALYSIS.status,
+        analysis_notes: parsed.analysis_notes || 'Partially parsed from AI response.',
+      };
+    } catch {
+      return {
+        ...DEFAULT_ANALYSIS,
+        analysis_notes: 'Failed to parse AI response: ' + raw.slice(0, 200),
+      };
+    }
+  }
+}
+
+async function callProvider(
+  provider: AIProvider,
+  systemPrompt: string,
+  userMessage: string,
+): Promise<string> {
+  const state = useAppStore.getState();
+
+  if (provider === 'local') {
+    const config = resolveLocalConfig({
+      endpoint: state.localEndpoint,
+      model: state.localModel,
+      apiKey: state.localApiKey,
+    });
+    if (!config.endpoint || !config.model) {
+      throw new Error(
+        'Local LLM endpoint or model is missing. Please configure it in API settings.',
+      );
+    }
+    return callLocal(systemPrompt, userMessage, config);
+  }
+
+  if (!state.openRouterKey) {
+    throw new Error('OpenRouter API Key is missing. Please configure it.');
+  }
+  return callOpenRouter(systemPrompt, userMessage, state.openRouterKey, CONFIG.DEFAULT_MODEL);
+}
+
+export async function analyzeIssue(
+  issue: Issue,
+  onLog?: (message: string) => void,
+  provider?: AIProvider,
+): Promise<AnalysisResult> {
+  const formatted = formatIssueForAnalysis(issue);
+  const selectedProvider: AIProvider = provider ?? useAppStore.getState().aiProvider;
+  onLog?.(`Analyzing #${issue.number}: ${issue.title.slice(0, 60)}...`);
+
+  let retries = 3;
+  let backoff = 2000;
+
+  while (retries > 0) {
+    try {
+      const raw = await callProvider(selectedProvider, ANALYSIS_PROMPT, formatted);
+      const result = parseAnalysisResponse(raw);
+      onLog?.(
+        `✓ #${issue.number} analyzed — score: ${result.doability_score}/100, status: ${result.status}`,
+      );
+      return result;
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (error.message === 'RATE_LIMITED' && retries > 1) {
+        onLog?.(`⏳ Rate limited. Waiting ${backoff / 1000}s before retry...`);
+        await new Promise((r) => setTimeout(r, backoff));
+        backoff *= 2;
+        retries--;
+        continue;
+      }
+      onLog?.(`✗ Failed to analyze #${issue.number}: ${error.message}`);
+      return { ...DEFAULT_ANALYSIS, analysis_notes: `Error: ${error.message}` };
+    }
+  }
+
+  return DEFAULT_ANALYSIS;
+}
+
+export async function analyzeAllIssues(
+  issues: Issue[],
+  onProgress?: (current: number, total: number) => void,
+  onLog?: (message: string) => void,
+  isCancelled?: () => boolean,
+  provider?: AIProvider,
+): Promise<Map<number, AnalysisResult>> {
+  const analyses = new Map<number, AnalysisResult>();
+  const selectedProvider: AIProvider = provider ?? useAppStore.getState().aiProvider;
+  const concurrency = selectedProvider === 'local' ? 2 : 15;
+  let completed = 0;
+
+  const queue = [...issues];
+
+  const next = async (): Promise<void> => {
+    if (isCancelled?.() || queue.length === 0) return;
+
+    const issue = queue.shift();
+    if (!issue) return;
+
+    try {
+      const result = await analyzeIssue(issue, onLog, selectedProvider);
+      if (!isCancelled?.()) {
+        analyses.set(issue.number, result);
+        completed++;
+        onProgress?.(completed, issues.length);
+      }
+    } catch (e) {
+      onLog?.(`Error in worker processing #${issue.number}: ${e}`);
+    }
+
+    return next();
+  };
+
+  const workers = Array.from({ length: Math.min(concurrency, issues.length) }, () => next());
+  await Promise.all(workers);
+
+  if (isCancelled?.()) {
+    onLog?.('Analysis cancelled by user.');
+  }
+
+  return analyses;
+}

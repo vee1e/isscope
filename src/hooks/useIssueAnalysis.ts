@@ -1,12 +1,12 @@
 import { useCallback, useRef } from 'react';
 import { useAppStore } from '../store/appStore';
-import { analyzeAllIssues } from '../lib/api/openrouter';
+import { analyzeAllIssues } from '../lib/api/provider';
 import { historyService } from '../lib/history/historyService';
 import { parseRepoInput } from '../lib/utils/validators';
 import type { Issue } from '../lib/types';
 
 export function useIssueAnalysis() {
-  const { setAnalysis, setFetchProgress, setScreen, addLog, repoInput } = useAppStore();
+  const { setAnalysis, setFetchProgress, setScreen, addLog, repoInput, aiProvider } = useAppStore();
 
   const cancelRef = useRef(false);
 
@@ -69,7 +69,15 @@ export function useIssueAnalysis() {
 
       addLog(`Analyzing ${issuesToAnalyze.length} issues with AI...`, 'info');
 
-      addLog(`Model: ${import.meta.env.VITE_MODEL_NAME || 'openai/gpt-oss-20b:free'}`, 'info');
+      if (aiProvider === 'local') {
+        const { localEndpoint, localModel } = useAppStore.getState();
+        addLog(`Provider: local (${localEndpoint} — ${localModel})`, 'info');
+      } else {
+        addLog(
+          `Provider: OpenRouter (${import.meta.env.VITE_MODEL_NAME || 'openai/gpt-oss-20b:free'})`,
+          'info',
+        );
+      }
 
       setFetchProgress({
         phase: 'analyzing',
@@ -120,7 +128,7 @@ export function useIssueAnalysis() {
       // Transition to report
       setScreen('report');
     },
-    [setAnalysis, setFetchProgress, setScreen, addLog, repoInput],
+    [setAnalysis, setFetchProgress, setScreen, addLog, repoInput, aiProvider],
   );
 
   const cancel = useCallback(() => {

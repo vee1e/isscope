@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { analyzeIssue, analyzeAllIssues } from './openrouter';
+import { callOpenRouter } from './openrouter';
+import { analyzeIssue, analyzeAllIssues } from './provider';
 import { useAppStore } from '../../store/appStore';
 import type { Issue } from '../types';
 
 describe('OpenRouter API Client', () => {
   let mockFetch: any;
 
-  // Helper to create mocked Response
   function createMockResponse(status: number, data: any) {
     return {
       ok: status >= 200 && status < 300,
@@ -48,21 +48,24 @@ describe('OpenRouter API Client', () => {
     mockFetch = vi.fn();
     vi.stubGlobal('fetch', mockFetch);
 
-    // Mock window global to avoid runtime ReferenceErrors
     vi.stubGlobal('window', {
       location: {
         origin: 'https://isscope-mock.com',
       },
     });
 
-    // Avoid real retry delays in test environment
     vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any) => {
       fn();
       return 0 as any;
     });
 
-    // Reset openrouter keys
-    useAppStore.setState({ openRouterKey: '' });
+    useAppStore.setState({
+      openRouterKey: '',
+      aiProvider: 'openrouter',
+      localEndpoint: 'http://localhost:11434/v1',
+      localModel: 'llama3.2',
+      localApiKey: '',
+    });
   });
 
   afterEach(() => {
@@ -70,30 +73,82 @@ describe('OpenRouter API Client', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('callOpenRouter & Configurations', () => {
-    it('throws error if OpenRouter Key is missing', async () => {
-      useAppStore.setState({ openRouterKey: '' });
+  describe('callOpenRouter', () => {
+    it('throws an explicit error when API Key is missing', async () => {
+      await expect(callOpenRouter('system', 'user', '')).rejects.toThrow(
+        /OpenRouter API Key is missing/,
+      );
+    });
+
+    it('makes expected HTTP request with Bearer auth and OpenRouter headers', async () => {
+      mockFetch.mockResolvedValue(
+        createMockResponse(200, {
+          choices: [{ message: { content: 'hello' } }],
+        }),
+      );
+
+      const out = await callOpenRouter(
+        'system prompt',
+        'user message',
+        'openrouter-secret-key',
+        'openai/gpt-oss-20b:free',
+      );
+
+      expect(out).toBe('hello');
+      expect(mockFetch).toHaveBeenCalled();
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toContain('https://openrouter.ai/api/v1/chat/completions');
+      expect(options.method).toBe('POST');
+      expect(options.headers['Authorization']).toBe('Bearer openrouter-secret-key');
+      expect(options.headers['HTTP-Referer']).toBe('https://isscope-mock.com');
+      expect(options.headers['X-Title']).toBe('Isscope');
+      expect(options.headers['Content-Type']).toBe('application/json');
+      const body = JSON.parse(options.body);
+      expect(body.model).toBe('openai/gpt-oss-20b:free');
+      expect(body.messages).toEqual([
+        { role: 'system', content: 'system prompt' },
+        { role: 'user', content: 'user message' },
+      ]);
+      expect(body.response_format).toEqual({ type: 'json_object' });
+    });
+
+    it('throws RATE_LIMITED on 429 status', async () => {
+      mockFetch.mockResolvedValue(createMockResponse(429, {}));
+
+      await expect(callOpenRouter('s', 'u', 'k')).rejects.toThrow('RATE_LIMITED');
+    });
+
+    it('throws descriptive error on non-ok responses', async () => {
+      mockFetch.mockResolvedValue(createMockResponse(500, 'boom'));
+
+      await expect(callOpenRouter('s', 'u', 'k')).rejects.toThrow(/OpenRouter error 500/);
+    });
+
+    it('returns an empty string when the response has no message content', async () => {
+      mockFetch.mockResolvedValue(createMockResponse(200, { choices: [] }));
+
+      const out = await callOpenRouter('s', 'u', 'k');
+      expect(out).toBe('');
+    });
+  });
+
+  describe('provider dispatch', () => {
+    it('falls back to DEFAULT_ANALYSIS with an error note when OpenRouter key is missing', async () => {
+      useAppStore.setState({ openRouterKey: '', aiProvider: 'openrouter' });
 
       const logSpy = vi.fn();
       const result = await analyzeIssue(mockIssue, logSpy);
 
-      // Falls back to DEFAULT_ANALYSIS with error noted
       expect(result.analysis_notes).toContain('OpenRouter API Key is missing');
       expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to analyze'));
     });
 
-    it('makes expected HTTP request when API Key is configured', async () => {
+    it('calls OpenRouter and parses the result when key is configured', async () => {
       useAppStore.setState({ openRouterKey: 'openrouter-secret-key' });
 
       mockFetch.mockResolvedValue(
         createMockResponse(200, {
-          choices: [
-            {
-              message: {
-                content: JSON.stringify(validAnalysisJSON),
-              },
-            },
-          ],
+          choices: [{ message: { content: JSON.stringify(validAnalysisJSON) } }],
         }),
       );
 
@@ -104,13 +159,49 @@ describe('OpenRouter API Client', () => {
       expect(fetchArgs[0]).toContain('/chat/completions');
 
       const options = fetchArgs[1];
-      expect(options.method).toBe('POST');
       expect(options.headers['Authorization']).toBe('Bearer openrouter-secret-key');
-      expect(options.headers['HTTP-Referer']).toBe('https://isscope-mock.com');
-
-      // Verify the parsed result matches valid JSON
       expect(result.doability_score).toBe(95);
       expect(result.complexity).toBe(1);
+    });
+
+    it('dispatches to the local provider when aiProvider is "local"', async () => {
+      useAppStore.setState({
+        aiProvider: 'local',
+        localEndpoint: 'http://localhost:11434/v1',
+        localModel: 'qwen2.5-coder:7b',
+        localApiKey: '',
+      });
+
+      mockFetch.mockResolvedValue(
+        createMockResponse(200, {
+          choices: [{ message: { content: JSON.stringify(validAnalysisJSON) } }],
+        }),
+      );
+
+      const result = await analyzeIssue(mockIssue);
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:11434/v1/chat/completions');
+      expect(options.headers['Authorization']).toBeUndefined();
+      const body = JSON.parse(options.body);
+      expect(body.model).toBe('qwen2.5-coder:7b');
+      expect(body.response_format).toBeUndefined();
+      expect(result.doability_score).toBe(95);
+    });
+
+    it('honors an explicit provider override even when store default differs', async () => {
+      useAppStore.setState({ aiProvider: 'openrouter', openRouterKey: 'k' });
+
+      mockFetch.mockResolvedValue(
+        createMockResponse(200, {
+          choices: [{ message: { content: JSON.stringify(validAnalysisJSON) } }],
+        }),
+      );
+
+      const result = await analyzeIssue(mockIssue, undefined, 'openrouter');
+
+      expect(result.doability_score).toBe(95);
     });
   });
 
@@ -118,7 +209,6 @@ describe('OpenRouter API Client', () => {
     it('retries on RATE_LIMITED (429) up to 3 times before failing', async () => {
       useAppStore.setState({ openRouterKey: 'valid-key' });
 
-      // Return 429 three times
       mockFetch.mockResolvedValue(createMockResponse(429, {}));
 
       const logSpy = vi.fn();
@@ -132,8 +222,6 @@ describe('OpenRouter API Client', () => {
     it('retries on 429 and succeeds if rate limit clears', async () => {
       useAppStore.setState({ openRouterKey: 'valid-key' });
 
-      // First call: 429
-      // Second call: 200 OK
       mockFetch.mockResolvedValueOnce(createMockResponse(429, {})).mockResolvedValueOnce(
         createMockResponse(200, {
           choices: [{ message: { content: JSON.stringify(validAnalysisJSON) } }],
@@ -169,7 +257,6 @@ describe('OpenRouter API Client', () => {
     it('salvages partial JSON responses with partial field data', async () => {
       useAppStore.setState({ openRouterKey: 'valid-key' });
 
-      // Incomplete schema: missing progress_estimate, skills_required, newcomer_friendliness
       const partialJSON = {
         summary: 'Partial analysis results.',
         doability_score: 75,
@@ -187,7 +274,6 @@ describe('OpenRouter API Client', () => {
       expect(result.summary).toBe('Partial analysis results.');
       expect(result.doability_score).toBe(75);
       expect(result.complexity).toBe(3);
-      // Fallback values applied
       expect(result.status).toBe('active');
       expect(result.analysis_notes).toBe('Partially parsed from AI response.');
     });
@@ -235,6 +321,38 @@ describe('OpenRouter API Client', () => {
       expect(analyses.get(1)?.doability_score).toBe(95);
       expect(analyses.get(2)?.doability_score).toBe(95);
       expect(progressSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('uses lower concurrency for the local provider', async () => {
+      useAppStore.setState({ aiProvider: 'local' });
+
+      const issueA = { ...mockIssue, number: 1 };
+      const issueB = { ...mockIssue, number: 2 };
+      const issueC = { ...mockIssue, number: 3 };
+
+      mockFetch.mockResolvedValue(
+        createMockResponse(200, {
+          choices: [{ message: { content: JSON.stringify(validAnalysisJSON) } }],
+        }),
+      );
+
+      let concurrentPeak = 0;
+      let inFlight = 0;
+      const originalThen = mockFetch.mockImplementation(async () => {
+        inFlight++;
+        concurrentPeak = Math.max(concurrentPeak, inFlight);
+        await new Promise((r) => setTimeout(r, 5));
+        inFlight--;
+        return createMockResponse(200, {
+          choices: [{ message: { content: JSON.stringify(validAnalysisJSON) } }],
+        });
+      });
+
+      await analyzeAllIssues([issueA, issueB, issueC]);
+
+      expect(concurrentPeak).toBeLessThanOrEqual(2);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      originalThen.mockRestore();
     });
 
     it('respects cancellation tokens', async () => {
