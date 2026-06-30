@@ -3,12 +3,14 @@ import { InputScreen } from './screens/InputScreen';
 import { LoadingScreen } from './screens/LoadingScreen';
 import { ReportScreen } from './screens/ReportScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
+import { PermissionErrorBanner } from './components/ui/PermissionErrorBanner';
 import { useAppStore } from './store/appStore';
 import { useGitHubIssues } from './hooks/useGitHubIssues';
 import { useIssueAnalysis } from './hooks/useIssueAnalysis';
+import { GitHubPermissionError } from './lib/api/github';
 
 function App() {
-  const { currentScreen, issues, analyses, setScreen, addLog } = useAppStore();
+  const { currentScreen, issues, analyses, setScreen, addLog, setPermissionError } = useAppStore();
   const { fetchIssues, historyInfo } = useGitHubIssues();
   const { analyzeIssues } = useIssueAnalysis();
 
@@ -36,9 +38,13 @@ function App() {
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         addLog(`Fatal error: ${errorMessage}`, 'error');
+        if (err instanceof GitHubPermissionError) {
+          setPermissionError(errorMessage);
+          setScreen('input');
+        }
       }
     },
-    [fetchIssues, analyzeIssues, analyses, addLog, setScreen],
+    [fetchIssues, analyzeIssues, analyses, addLog, setScreen, setPermissionError],
   );
 
   // When screen transitions to 'fetching', start the pipeline
@@ -59,6 +65,7 @@ function App() {
         overflow: 'hidden',
       }}
     >
+      <PermissionErrorBanner />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {currentScreen === 'input' && <InputScreen />}
         {(currentScreen === 'fetching' || currentScreen === 'analyzing') && (

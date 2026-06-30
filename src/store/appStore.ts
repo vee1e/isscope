@@ -70,6 +70,11 @@ interface AppState {
   addLog: (message: string, type?: LogType) => void;
   clearLogs: () => void;
 
+  // Permission error banner, persists until dismissed or the token changes,
+  // unlike log entries which scroll away with the rest of the terminal feed.
+  permissionError: string | null;
+  setPermissionError: (message: string | null) => void;
+
   // Cancel
   isCancelled: boolean;
   cancel: () => void;
@@ -103,7 +108,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   // API Keys
   githubToken: '',
   openRouterKey: '',
-  setApiKeys: (keys) => set((state) => ({ ...state, ...keys })),
+  setApiKeys: (keys) =>
+    set((state) => ({
+      ...state,
+      ...keys,
+      permissionError: keys.githubToken !== undefined ? null : state.permissionError,
+    })),
 
   // AI Provider
   aiProvider: 'openrouter',
@@ -167,6 +177,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     })),
   clearLogs: () => set({ logEntries: [] }),
 
+  // Permission error banner
+  permissionError: null,
+  setPermissionError: (message) => set({ permissionError: message }),
+
   // Cancel
   isCancelled: false,
   cancel: () => set({ isCancelled: true }),
@@ -186,6 +200,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       isCancelled: false,
       history: [],
       isHistoryLoading: false,
+      permissionError: null,
     }),
 
   // Settings

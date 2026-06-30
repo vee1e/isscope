@@ -27,6 +27,24 @@ interface RateLimitInfo {
   reset: number;
 }
 
+export const GITHUB_TOKEN_SETTINGS_URL = 'https://github.com/settings/tokens';
+
+/**
+ * Thrown when a 404 from the GitHub API is caused by the configured token
+ * lacking the `repo` scope, rather than the resource genuinely not existing.
+ * The `x-oauth-scopes` response header lists the scopes granted to the
+ * token, which lets us distinguish "private repo, missing scope" from
+ * "repo really doesn't exist" without an extra request.
+ */
+export class GitHubPermissionError extends Error {
+  readonly settingsUrl = GITHUB_TOKEN_SETTINGS_URL;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'GitHubPermissionError';
+  }
+}
+
 const rateLimitInfo: RateLimitInfo = {
   remaining: 5000,
   limit: 5000,
@@ -101,6 +119,23 @@ async function fetchWithRetry(
       continue;
     }
 
+    if (response.status === 404) {
+      const token = useAppStore.getState().githubToken;
+      const scopeHeader = response.headers.get('x-oauth-scopes') ?? '';
+      const hasRepoScope = scopeHeader
+        .split(',')
+        .map((s) => s.trim())
+        .includes('repo');
+
+      if (token && !hasRepoScope) {
+        throw new GitHubPermissionError(
+          'This may be a private repository. Your GitHub token is missing the `repo` scope ' +
+            'required to access private repositories. Update your token at ' +
+            `${GITHUB_TOKEN_SETTINGS_URL}.`,
+        );
+      }
+    }
+
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
     }
@@ -109,6 +144,17 @@ async function fetchWithRetry(
   }
 
   throw new Error('Max retries exceeded for GitHub API');
+}
+
+/**
+ * The Search API silently excludes repositories the token can't see instead
+ * of returning a 404, so a private repo with a scope-less token looks
+ * identical to a public repo with zero open issues (`total_count: 0`).
+ * When the first search page comes back empty, fetch the repo directly so
+ * fetchWithRetry's 404 handling can tell the two cases apart.
+ */
+async function assertRepoAccessible(owner: string, repo: string): Promise<void> {
+  await fetchWithRetry(`${CONFIG.GITHUB_API_BASE}/repos/${owner}/${repo}`);
 }
 
 export async function searchIssues(
@@ -135,23 +181,25 @@ export async function searchIssues(
 
     const data: GitHubSearchResponse = await response.json();
 
+    if (page === 1 && data.total_count === 0) {
+      await assertRepoAccessible(owner, repo);
+    }
+
     const issues = data.items
       .filter((item) => !item.pull_request)
-      .map(
-        (item): Issue => ({
-          number: item.number,
-          title: item.title,
-          body: item.body,
-          user: item.user,
-          labels: item.labels,
-          assignees: item.assignees,
-          comments_count: item.comments,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          html_url: item.html_url,
-          state: item.state,
-        }),
-      );
+      .map((item): Issue => ({
+        number: item.number,
+        title: item.title,
+        body: item.body,
+        user: item.user,
+        labels: item.labels,
+        assignees: item.assignees,
+        comments_count: item.comments,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        html_url: item.html_url,
+        state: item.state,
+      }));
 
     allIssues.push(...issues);
 
@@ -190,15 +238,13 @@ export async function fetchIssueComments(
 
   const data = await response.json();
 
-  return data.map(
-    (c: Record<string, unknown>): Comment => ({
-      id: c.id as number,
-      user: c.user as Comment['user'],
-      body: c.body as string,
-      created_at: c.created_at as string,
-      updated_at: c.updated_at as string,
-    }),
-  );
+  return data.map((c: Record<string, unknown>): Comment => ({
+    id: c.id as number,
+    user: c.user as Comment['user'],
+    body: c.body as string,
+    created_at: c.created_at as string,
+    updated_at: c.updated_at as string,
+  }));
 }
 
 export async function fetchIssueTimeline(
@@ -217,16 +263,14 @@ export async function fetchIssueTimeline(
 
     const data: Record<string, unknown>[] = await response.json();
 
-    return data.map(
-      (e): TimelineEvent => ({
-        event: e.event as string,
-        created_at: e.created_at as string,
-        actor: e.actor as TimelineEvent['actor'],
-        source: e.source as TimelineEvent['source'],
-        commit_id: e.commit_id as string | undefined,
-        label: e.label as TimelineEvent['label'],
-      }),
-    );
+    return data.map((e): TimelineEvent => ({
+      event: e.event as string,
+      created_at: e.created_at as string,
+      actor: e.actor as TimelineEvent['actor'],
+      source: e.source as TimelineEvent['source'],
+      commit_id: e.commit_id as string | undefined,
+      label: e.label as TimelineEvent['label'],
+    }));
   } catch {
     return [];
   }

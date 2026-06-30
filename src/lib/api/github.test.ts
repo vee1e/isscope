@@ -6,6 +6,7 @@ import {
   fetchIssueDetails,
   fetchAllIssueDetails,
   getRateLimitInfo,
+  GitHubPermissionError,
 } from './github';
 import { useAppStore } from '../../store/appStore';
 
@@ -50,17 +51,20 @@ describe('GitHub API Client', () => {
     it('sends Authorization header when githubToken is configured in appStore', async () => {
       useAppStore.setState({ githubToken: 'gh-secret-token' });
 
-      mockFetch.mockResolvedValue(
-        createMockResponse(
-          200,
-          { total_count: 0, items: [] },
-          {
-            'X-RateLimit-Remaining': '4500',
-            'X-RateLimit-Limit': '5000',
-            'X-RateLimit-Reset': '123456',
-          },
-        ),
-      );
+      // Two calls: search returns 0 results, then repo check succeeds
+      mockFetch
+        .mockResolvedValueOnce(
+          createMockResponse(
+            200,
+            { total_count: 0, items: [] },
+            {
+              'X-RateLimit-Remaining': '4500',
+              'X-RateLimit-Limit': '5000',
+              'X-RateLimit-Reset': '123456',
+            },
+          ),
+        )
+        .mockResolvedValueOnce(createMockResponse(200, {}));
 
       await searchIssues('owner', 'repo', 5);
 
@@ -77,6 +81,44 @@ describe('GitHub API Client', () => {
   });
 
   describe('fetchWithRetry & Retry Behavior', () => {
+    it('throws GitHubPermissionError on 404 with token but missing repo scope', async () => {
+      useAppStore.setState({ githubToken: 'gh-secret-token' });
+
+      mockFetch.mockResolvedValue(
+        createMockResponse(404, {}, { 'x-oauth-scopes': 'read:user, gist' }),
+      );
+
+      await expect(fetchIssueComments('owner', 'repo', 42)).rejects.toThrow(GitHubPermissionError);
+      await expect(fetchIssueComments('owner', 'repo', 42)).rejects.toThrow(
+        /private repository.*repo.*scope/,
+      );
+    });
+
+    it('throws generic error on 404 with token and repo scope present', async () => {
+      useAppStore.setState({ githubToken: 'gh-secret-token' });
+
+      mockFetch.mockResolvedValue(
+        createMockResponse(404, {}, { 'x-oauth-scopes': 'repo, read:user' }),
+      );
+
+      await expect(fetchIssueComments('owner', 'repo', 42)).rejects.toThrow(
+        'GitHub API error: 404 Error',
+      );
+      await expect(fetchIssueComments('owner', 'repo', 42)).rejects.not.toThrow(
+        GitHubPermissionError,
+      );
+    });
+
+    it('throws generic error on 404 without token', async () => {
+      useAppStore.setState({ githubToken: '' });
+
+      mockFetch.mockResolvedValue(createMockResponse(404, {}));
+
+      await expect(fetchIssueComments('owner', 'repo', 42)).rejects.toThrow(
+        'GitHub API error: 404 Error',
+      );
+    });
+
     it('retries successfully on 403 Forbidden with empty rate limit', async () => {
       // First call: 403 Forbidden (rate limited)
       // Second call: 200 OK
@@ -204,6 +246,34 @@ describe('GitHub API Client', () => {
       const results = await searchIssues('owner', 'repo', 1);
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(results).toHaveLength(1);
+    });
+
+    it('calls assertRepoAccessible when search returns zero results on page 1', async () => {
+      useAppStore.setState({ githubToken: 'gh-secret-token' });
+
+      // First call: search returns 0 results
+      // Second call: assertRepoAccessible checks repo directly, succeeds
+      mockFetch
+        .mockResolvedValueOnce(createMockResponse(200, { total_count: 0, items: [] }))
+        .mockResolvedValueOnce(createMockResponse(200, {})); // repo exists
+
+      const results = await searchIssues('owner', 'repo', 5);
+      expect(results).toHaveLength(0);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // First call is search, second is repo check
+      expect(mockFetch.mock.calls[1][0]).toContain('/repos/owner/repo');
+    });
+
+    it('throws GitHubPermissionError when assertRepoAccessible gets 404 with missing scope', async () => {
+      useAppStore.setState({ githubToken: 'gh-secret-token' });
+
+      // First call: search returns 0 results
+      // Second call: repo check gets 404 with missing repo scope
+      mockFetch
+        .mockResolvedValueOnce(createMockResponse(200, { total_count: 0, items: [] }))
+        .mockResolvedValueOnce(createMockResponse(404, {}, { 'x-oauth-scopes': 'read:user' }));
+
+      await expect(searchIssues('owner', 'repo', 5)).rejects.toThrow(GitHubPermissionError);
     });
   });
 
