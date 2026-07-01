@@ -31,7 +31,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: `Hi @${author}\n\nThis PR has been closed automatically because it contains changes to \`package.json\` or \`package-lock.json\`.\n\nPlease do not push modifications to \`package.json\` in your pull requests.`
+              body: `Hi @${author}\n\nThis PR has been closed automatically because it contains changes to \`package.json\` or \`package-lock.json\`.\n\nPlease do not push modifications to npm manifests in your pull requests.`
             });
 
             await github.rest.pulls.update({
