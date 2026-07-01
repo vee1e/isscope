@@ -9,6 +9,7 @@
 -acagou ai slop and claiming an issue with open PR
 anasahhm
 aqilaziz
+-dippp10-ally
 eta7osc
 kir943
 -quick123-666 openclaw slop
