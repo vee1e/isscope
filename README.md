@@ -63,7 +63,8 @@ These instructions have been tested on a clean machine to ensure a reliable setu
    cp .env.example .env
    ```
 
-   _(Create `.env.example` with `VITE_GITHUB_TOKEN=` and `VITE_OPENROUTER_API_KEY=` if needed)._
+   > **Note:** If the repository already includes `.env.example`, you only need to copy it to `.env`. Creating a new `.env.example` is only necessary if the file is missing.
+
 
 5. **Start the development server:**
    ```bash
