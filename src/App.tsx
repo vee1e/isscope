@@ -6,7 +6,9 @@ import { HistoryScreen } from './screens/HistoryScreen';
 import { useAppStore } from './store/appStore';
 import { useGitHubIssues } from './hooks/useGitHubIssues';
 import { useIssueAnalysis } from './hooks/useIssueAnalysis';
+import { NoIssuesScreen } from './screens/NoIssuesScreen';
 
+import { Inbox } from 'lucide-react';
 function App() {
   const { currentScreen, issues, analyses, setScreen, addLog } = useAppStore();
   const { fetchIssues, historyInfo } = useGitHubIssues();
@@ -17,8 +19,8 @@ function App() {
       try {
         const fetchedIssues = await fetchIssues(forceRefresh);
         if (!fetchedIssues || fetchedIssues.length === 0) {
-          addLog('No issues found. Returning to input.', 'warning');
-          setScreen('input');
+          addLog('No open unlinked issues found for this repository.', 'warning');
+          setScreen('no-issues');
           return;
         }
 
@@ -61,9 +63,12 @@ function App() {
     >
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {currentScreen === 'input' && <InputScreen />}
+        {currentScreen === 'no-issues' && <NoIssuesScreen />}
+
         {(currentScreen === 'fetching' || currentScreen === 'analyzing') && (
           <LoadingScreen historyInfo={historyInfo} onForceRefresh={() => startAnalysis(true)} />
         )}
+
         {currentScreen === 'report' && <ReportScreen />}
         {currentScreen === 'history' && <HistoryScreen />}
       </div>

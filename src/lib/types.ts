@@ -75,8 +75,7 @@ export const AnalysisResultSchema = z.object({
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 
 // ── UI State Types ────────────────────────────────
-
-export type AppScreen = 'input' | 'fetching' | 'analyzing' | 'report' | 'history';
+export type AppScreen = 'input' | 'fetching' | 'analyzing' | 'report' | 'history' | 'no-issues';
 
 export type LogType = 'info' | 'success' | 'warning' | 'error';
 
