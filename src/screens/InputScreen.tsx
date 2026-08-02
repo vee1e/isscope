@@ -504,7 +504,7 @@ export function InputScreen() {
                 Recent
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {recentHistory.map((entry) => (
+                {(recentHistory ?? []).map((entry) => (
                   <button
                     key={entry.key}
                     type="button"
