@@ -105,6 +105,18 @@ describe('InputScreen', () => {
     expect(screen.getByPlaceholderText('sk-or-...')).toBeInTheDocument();
   });
 
+  it('warns before enabling browser storage for API keys', () => {
+    render(<InputScreen />);
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /Configure API Keys/i }));
+    });
+
+    expect(
+      screen.getByText(/Stored API keys remain in this browser's local storage/i),
+    ).toBeInTheDocument();
+  });
+
   it('navigates to history screen', () => {
     render(<InputScreen />);
 

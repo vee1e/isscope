@@ -1057,6 +1057,18 @@ export function InputScreen() {
                   />
                   Remember API keys
                 </label>
+                <div
+                  role="note"
+                  style={{
+                    marginTop: '6px',
+                    fontSize: '11px',
+                    lineHeight: 1.5,
+                    color: 'var(--status-warning)',
+                  }}
+                >
+                  Stored API keys remain in this browser's local storage. Only enable this on a
+                  trusted device.
+                </div>
 
                 <Button
                   onClick={handleSaveApiKeys}
