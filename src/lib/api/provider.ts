@@ -200,3 +200,5 @@ export async function analyzeAllIssues(
 
   return analyses;
 }
+
+.catch(err => console.error("Promise.all failed:", err));
