@@ -310,3 +310,5 @@ export async function fetchAllIssueDetails(
 
   return issues.map((i) => resultsMap.get(i.number) || i);
 }
+
+.catch(err => console.error("Promise.all failed:", err));
