@@ -125,7 +125,7 @@ export function InputScreen() {
 
     if (storedMaxIssues) {
       const parsed = parseInt(storedMaxIssues, 10);
-      if (!isNaN(parsed)) {
+      if (!Number.isNaN(parsed)) {
         setMaxIssues(parsed);
       }
     }
