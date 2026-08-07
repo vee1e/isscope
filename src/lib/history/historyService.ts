@@ -62,7 +62,7 @@ class HistoryService {
     );
 
     const oldest = new Date(sorted[0].created_at);
-    const newest = new Date(sorted[sorted.length - 1].created_at);
+    const newest = new Date(sorted.at(-1).created_at);
     const daysSpan = Math.max(1, (newest.getTime() - oldest.getTime()) / (1000 * 60 * 60 * 24));
 
     return {
