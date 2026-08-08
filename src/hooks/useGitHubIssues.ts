@@ -3,7 +3,7 @@ import { useAppStore } from '../store/appStore';
 import { searchIssues, fetchAllIssueDetails, getRateLimitInfo } from '../lib/api/github';
 import { parseRepoInput } from '../lib/utils/validators';
 import { historyService } from '../lib/history/historyService';
-import type { Issue } from '../lib/types';
+import type { Issue, AnalysisResult } from '../lib/types';
 
 export function useGitHubIssues() {
   const {
@@ -109,9 +109,15 @@ export function useGitHubIssues() {
         setIssues(detailedIssues);
         addLog(`✓ All ${detailedIssues.length} issues fetched with details`, 'success');
 
-        // Save to history
+        // Save to history, preserving any analyses already stored so a
+        // refresh does not wipe them and force a full re-analysis
         addLog('Saving to history...', 'info');
-        await historyService.saveToHistory(owner, repo, detailedIssues, new Map());
+        const existing = await historyService.getHistoryEntry(owner, repo);
+        const existingAnalyses =
+          existing.valid && existing.data
+            ? existing.data.analyses
+            : new Map<number, AnalysisResult>();
+        await historyService.saveToHistory(owner, repo, detailedIssues, existingAnalyses);
         await loadHistory();
         addLog('✓ Data saved to history', 'success');
 
