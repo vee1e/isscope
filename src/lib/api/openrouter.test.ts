@@ -130,6 +130,34 @@ describe('OpenRouter API Client', () => {
       const out = await callOpenRouter('s', 'u', 'k');
       expect(out).toBe('');
     });
+
+    it('aborts the request when the response exceeds the timeout', async () => {
+      let abortFn: (() => void) | null = null;
+      vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any) => {
+        abortFn = fn;
+        return 0 as any;
+      });
+
+      mockFetch.mockImplementation((_url: string, init: any) => {
+        const signal = init?.signal;
+        return new Promise((_resolve, reject) => {
+          if (signal?.aborted) {
+            reject(new DOMException('The operation was aborted.', 'AbortError'));
+            return;
+          }
+          signal?.addEventListener('abort', () => {
+            reject(new DOMException('The operation was aborted.', 'AbortError'));
+          });
+        }); // never resolves on its own
+      });
+
+      const promise = callOpenRouter('s', 'u', 'k');
+
+      // Simulate the timeout firing
+      abortFn!();
+
+      await expect(promise).rejects.toThrow('timed out');
+    });
   });
 
   describe('provider dispatch', () => {
