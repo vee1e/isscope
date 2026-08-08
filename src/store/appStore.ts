@@ -191,7 +191,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Settings
   maxIssues: CONFIG.DEFAULT_MAX_ISSUES,
   setMaxIssues: (max) =>
-    set({ maxIssues: Math.max(CONFIG.MIN_MAX_ISSUES, Math.min(CONFIG.MAX_MAX_ISSUES, max)) }),
+    set({
+      maxIssues: Number.isFinite(max)
+        ? Math.max(CONFIG.MIN_MAX_ISSUES, Math.min(CONFIG.MAX_MAX_ISSUES, max))
+        : CONFIG.DEFAULT_MAX_ISSUES,
+    }),
 
   // History
   history: [],

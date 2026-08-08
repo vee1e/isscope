@@ -73,6 +73,15 @@ describe('useAppStore (Zustand Global State)', () => {
       expect(useAppStore.getState().maxIssues).toBe(CONFIG.MIN_MAX_ISSUES);
     });
 
+    it('falls back to the default when setMaxIssues receives NaN', () => {
+      // e.g. the settings number input being cleared mid-edit
+      useAppStore.getState().setMaxIssues(NaN);
+      expect(useAppStore.getState().maxIssues).toBe(CONFIG.DEFAULT_MAX_ISSUES);
+
+      useAppStore.getState().setMaxIssues(200);
+      expect(useAppStore.getState().maxIssues).toBe(200);
+    });
+
     it('sets fetch progress correctly', () => {
       useAppStore.getState().setFetchProgress({ phase: 'analyzing', current: 5, total: 10 });
       expect(useAppStore.getState().fetchProgress).toEqual({
