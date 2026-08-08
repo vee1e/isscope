@@ -67,6 +67,18 @@ function updateRateLimit(response: Response) {
   }
 }
 
+// GitHub sends a Retry-After header (in seconds) on 403/429 rate-limit
+// responses. Prefer it over guessing, when present.
+function getRetryAfter(response: Response): number | null {
+  const raw = response.headers.get('Retry-After');
+  if (!raw) {
+    return null;
+  }
+
+  const seconds = parseInt(raw, 10);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : null;
+}
+
 export function getRateLimitInfo(): RateLimitInfo {
   return { ...rateLimitInfo };
 }
@@ -86,18 +98,25 @@ async function fetchWithRetry(
 
     updateRateLimit(response);
 
-    if (response.status === 403 && rateLimitInfo.remaining <= 0) {
-      const resetTime = rateLimitInfo.reset * 1000 - Date.now();
-      const waitTime = Math.max(resetTime, 1000);
-
-      await new Promise((r) => setTimeout(r, waitTime));
-      continue;
-    }
-
-    if (response.status === 429) {
+    if (response.status === 403 || response.status === 429) {
+      const retryAfter = getRetryAfter(response);
       const backoff = Math.pow(2, i) * 1000;
 
-      await new Promise((r) => setTimeout(r, backoff));
+      let waitTime: number;
+
+      if (retryAfter !== null) {
+        waitTime = retryAfter * 1000;
+      } else if (response.status === 403 && rateLimitInfo.remaining <= 0) {
+        const resetTime = rateLimitInfo.reset * 1000 - Date.now();
+        waitTime = Math.max(resetTime, 1000);
+      } else if (response.status === 429) {
+        waitTime = backoff;
+      } else {
+        // 403 that is not a rate-limit exhaustion — retrying won't help
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
+
+      await new Promise((r) => setTimeout(r, waitTime));
       continue;
     }
 
@@ -137,21 +156,19 @@ export async function searchIssues(
 
     const issues = data.items
       .filter((item) => !item.pull_request)
-      .map(
-        (item): Issue => ({
-          number: item.number,
-          title: item.title,
-          body: item.body,
-          user: item.user,
-          labels: item.labels,
-          assignees: item.assignees,
-          comments_count: item.comments,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          html_url: item.html_url,
-          state: item.state,
-        }),
-      );
+      .map((item): Issue => ({
+        number: item.number,
+        title: item.title,
+        body: item.body,
+        user: item.user,
+        labels: item.labels,
+        assignees: item.assignees,
+        comments_count: item.comments,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        html_url: item.html_url,
+        state: item.state,
+      }));
 
     allIssues.push(...issues);
 
@@ -190,15 +207,13 @@ export async function fetchIssueComments(
 
   const data = await response.json();
 
-  return data.map(
-    (c: Record<string, unknown>): Comment => ({
-      id: c.id as number,
-      user: c.user as Comment['user'],
-      body: c.body as string,
-      created_at: c.created_at as string,
-      updated_at: c.updated_at as string,
-    }),
-  );
+  return data.map((c: Record<string, unknown>): Comment => ({
+    id: c.id as number,
+    user: c.user as Comment['user'],
+    body: c.body as string,
+    created_at: c.created_at as string,
+    updated_at: c.updated_at as string,
+  }));
 }
 
 export async function fetchIssueTimeline(
@@ -217,16 +232,14 @@ export async function fetchIssueTimeline(
 
     const data: Record<string, unknown>[] = await response.json();
 
-    return data.map(
-      (e): TimelineEvent => ({
-        event: e.event as string,
-        created_at: e.created_at as string,
-        actor: e.actor as TimelineEvent['actor'],
-        source: e.source as TimelineEvent['source'],
-        commit_id: e.commit_id as string | undefined,
-        label: e.label as TimelineEvent['label'],
-      }),
-    );
+    return data.map((e): TimelineEvent => ({
+      event: e.event as string,
+      created_at: e.created_at as string,
+      actor: e.actor as TimelineEvent['actor'],
+      source: e.source as TimelineEvent['source'],
+      commit_id: e.commit_id as string | undefined,
+      label: e.label as TimelineEvent['label'],
+    }));
   } catch {
     return [];
   }

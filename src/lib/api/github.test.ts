@@ -111,6 +111,33 @@ describe('GitHub API Client', () => {
       expect(comments).toEqual([]);
     });
 
+    it('honors the Retry-After header on 429 instead of exponential backoff', async () => {
+      const delays: number[] = [];
+      vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: number) => {
+        delays.push(ms ?? 0);
+        fn();
+        return 0 as any;
+      });
+
+      mockFetch
+        .mockResolvedValueOnce(createMockResponse(429, {}, { 'Retry-After': '60' }))
+        .mockResolvedValueOnce(createMockResponse(200, []));
+
+      const comments = await fetchIssueComments('owner', 'repo', 42);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(delays[0]).toBe(60000);
+      expect(comments).toEqual([]);
+    });
+
+    it('does not retry 403 errors that are not rate-limit exhaustion', async () => {
+      mockFetch.mockResolvedValue(createMockResponse(403, {}, { 'X-RateLimit-Remaining': '4999' }));
+
+      await expect(fetchIssueComments('owner', 'repo', 42)).rejects.toThrow(
+        'GitHub API error: 403 Error',
+      );
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
     it('throws error immediately on non-retryable error (e.g. 500 Internal Server Error)', async () => {
       mockFetch.mockResolvedValue(createMockResponse(500, { message: 'Crash' }));
 
