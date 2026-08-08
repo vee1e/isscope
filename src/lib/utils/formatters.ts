@@ -48,6 +48,10 @@ export function formatTimeAgo(ts: string | number): string {
  * @returns The truncated string with an ellipsis, or the original string if it is short enough.
  */
 export function truncate(str: string, maxLen: number): string {
+  if (str.length === 0) return str;
+  // The ellipsis alone is one character, so anything at or below 1 can only
+  // render the ellipsis itself
+  if (maxLen <= 1) return '…';
   if (str.length <= maxLen) return str;
   return str.slice(0, maxLen - 1) + '…';
 }

@@ -48,6 +48,17 @@ describe('formatters utilities', () => {
     expect(truncate('hello world', 6)).toBe('hello…');
   });
 
+  it('never exceeds maxLen when the limit is 1', () => {
+    expect(truncate('hello', 1)).toBe('…');
+  });
+
+  it('handles zero or negative maxLen without producing longer output', () => {
+    // Previously truncate('hello', 0) returned 'hell…' — longer than the input
+    expect(truncate('hello', 0)).toBe('…');
+    expect(truncate('hello', -3)).toBe('…');
+    expect(truncate('', 0)).toBe('');
+  });
+
   // ── complexityLabel ─────────────────────────────
   it('returns correct complexity label', () => {
     expect(complexityLabel(2)).toBe('Simple');
