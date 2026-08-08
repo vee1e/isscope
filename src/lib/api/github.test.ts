@@ -178,21 +178,92 @@ describe('GitHub API Client', () => {
       expect(mockFetch.mock.calls[0][0]).toContain('page=1');
     });
 
-    it('paginates correctly until total count or maxIssues is reached', async () => {
-      const issueA = { number: 1, title: 'A', user: {}, labels: [], assignees: [], comments: 0 };
-      const issueB = { number: 2, title: 'B', user: {}, labels: [], assignees: [], comments: 0 };
+    it('paginates until all pages are consumed (bounded by search API 1000-result cap)', async () => {
+      // per_page=100, total_count=150 → exactly 2 pages are needed
+      const page1Items = Array.from({ length: 100 }, (_, i) => ({
+        number: i + 1,
+        title: `A${i + 1}`,
+        user: {},
+        labels: [],
+        assignees: [],
+        comments: 0,
+      }));
+      const page2Items = Array.from({ length: 50 }, (_, i) => ({
+        number: i + 101,
+        title: `B${i + 1}`,
+        user: {},
+        labels: [],
+        assignees: [],
+        comments: 0,
+      }));
 
-      // Return page 1 first, then page 2
       mockFetch
-        .mockResolvedValueOnce(createMockResponse(200, { total_count: 2, items: [issueA] }))
-        .mockResolvedValueOnce(createMockResponse(200, { total_count: 2, items: [issueB] }));
+        .mockResolvedValueOnce(createMockResponse(200, { total_count: 150, items: page1Items }))
+        .mockResolvedValueOnce(createMockResponse(200, { total_count: 150, items: page2Items }));
 
-      // Max issues is 5, but total_count is 2, so it fetches 2 pages
-      const results = await searchIssues('owner', 'repo', 5);
+      const results = await searchIssues('owner', 'repo', 200);
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(results).toHaveLength(2);
+      expect(results).toHaveLength(150);
       expect(results[0].number).toBe(1);
-      expect(results[1].number).toBe(2);
+      expect(results[149].number).toBe(150);
+    });
+
+    it('keeps paginating when a page contains only pull requests', async () => {
+      // total_count includes PRs (search matches them too). Pages full of PRs
+      // must not stop pagination, otherwise issues beyond them are never fetched.
+      const prItem = {
+        number: 900,
+        title: 'PR',
+        user: {},
+        labels: [],
+        assignees: [],
+        comments: 0,
+        pull_request: {},
+      };
+      const issueItem = {
+        number: 42,
+        title: 'Real issue',
+        user: {},
+        labels: [],
+        assignees: [],
+        comments: 0,
+      };
+
+      // Page 1: 100 PRs (0 comments sort first), page 2: 100 PRs, page 3: 50 issues
+      mockFetch
+        .mockResolvedValueOnce(
+          createMockResponse(200, {
+            total_count: 250,
+            items: Array.from({ length: 100 }, () => prItem),
+          }),
+        )
+        .mockResolvedValueOnce(
+          createMockResponse(200, {
+            total_count: 250,
+            items: Array.from({ length: 100 }, () => prItem),
+          }),
+        )
+        .mockResolvedValueOnce(
+          createMockResponse(200, {
+            total_count: 250,
+            items: Array.from({ length: 50 }, () => issueItem),
+          }),
+        );
+
+      const results = await searchIssues('owner', 'repo', 50);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(results).toHaveLength(50);
+      expect(results[0].number).toBe(42);
+    });
+
+    it('does not request pages beyond the search API 1000-result cap', async () => {
+      mockFetch.mockResolvedValue(createMockResponse(200, { total_count: 5000, items: [] }));
+
+      await searchIssues('owner', 'repo', 1000);
+
+      // With per_page=100 and a 1000-result cap, at most 10 pages are requested
+      expect(mockFetch.mock.calls.length).toBe(10);
+      expect(mockFetch.mock.calls[9][0]).toContain('page=10');
     });
 
     it('stops pagination immediately when maxIssues is reached', async () => {
