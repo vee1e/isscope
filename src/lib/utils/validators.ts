@@ -33,5 +33,5 @@ export function parseRepoInput(input: string): { owner: string; repo: string } {
   }
 
   const [owner, repo] = trimmed.split('/');
-  return { owner, repo };
+  return { owner, repo: repo.replace(/\.git$/, '') };
 }

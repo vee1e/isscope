@@ -77,5 +77,13 @@ describe('validators utilities', () => {
         repo: 'react',
       });
     });
+
+    it('strips .git suffix from the plain owner/repo form', () => {
+      // validateRepoInput accepts owner/repo.git, so parsing must match
+      expect(parseRepoInput('facebook/react.git')).toEqual({
+        owner: 'facebook',
+        repo: 'react',
+      });
+    });
   });
 });
