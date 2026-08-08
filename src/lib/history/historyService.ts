@@ -74,6 +74,7 @@ class HistoryService {
 
   private calculateCommentActivityRate(issues: Issue[]): HistoryMetadata['commentsActivity'] {
     let totalComments = 0;
+    let oldestCommentDate: Date | null = null;
     let lastCommentDate: Date | null = null;
 
     for (const issue of issues) {
@@ -81,6 +82,9 @@ class HistoryService {
         totalComments += issue.comments.length;
         for (const comment of issue.comments) {
           const date = new Date(comment.created_at);
+          if (!oldestCommentDate || date < oldestCommentDate) {
+            oldestCommentDate = date;
+          }
           if (!lastCommentDate || date > lastCommentDate) {
             lastCommentDate = date;
           }
@@ -96,9 +100,13 @@ class HistoryService {
       };
     }
 
-    // Use 30 days as default span for comment rate calculation
-    // or use the time since first comment if repo is newer
-    const daysSpan = 30;
+    // Use the actual span of the sampled comments so young repos are not
+    // penalized by a fixed 30-day denominator (mirrors the issue rate).
+    const daysSpan = Math.max(
+      1,
+      (lastCommentDate.getTime() - (oldestCommentDate ?? lastCommentDate).getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
 
     return {
       newCommentsPerDay: totalComments / daysSpan,

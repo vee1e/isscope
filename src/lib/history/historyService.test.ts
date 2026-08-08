@@ -283,9 +283,38 @@ describe('HistoryService', () => {
       expect(savedEntry.metadata.issueCount).toBe(2);
       // 2 issues spanning 10 days = 0.2 issues per day
       expect(savedEntry.metadata.issuesActivity.newIssuesPerDay).toBeCloseTo(0.2);
-      // 1 comment / 30 default days = 0.033 comments per day
-      expect(savedEntry.metadata.commentsActivity.newCommentsPerDay).toBeCloseTo(0.033);
+      // 1 comment with a single-day sample span (floor of 1 day) = 1 per day
+      expect(savedEntry.metadata.commentsActivity.newCommentsPerDay).toBeCloseTo(1);
       expect(savedEntry.analyses).toEqual({ '1': { doability_score: 95 } });
+    });
+
+    it('scales comment activity rate by the actual comment span, not a fixed 30 days', async () => {
+      mockStore.put.mockImplementation(() => createMockRequest());
+
+      const mockIssues: Issue[] = [
+        {
+          number: 1,
+          created_at: '2026-05-01T12:00:00Z',
+          comments: [
+            { id: 1, created_at: '2026-05-02T12:00:00Z' },
+            { id: 2, created_at: '2026-05-04T12:00:00Z' },
+            { id: 3, created_at: '2026-05-08T12:00:00Z' },
+            { id: 4, created_at: '2026-05-10T12:00:00Z' },
+            { id: 5, created_at: '2026-05-12T12:00:00Z' },
+          ],
+        } as any,
+      ];
+      const mockAnalyses = new Map<number, any>();
+
+      await historyService.saveToHistory('owner', 'repo', mockIssues, mockAnalyses);
+
+      const savedEntry = mockStore.put.mock.calls[0][0];
+      // 5 comments over a 10-day span = 0.5 per day (previously 5/30 = 0.167)
+      expect(savedEntry.metadata.commentsActivity.newCommentsPerDay).toBeCloseTo(0.5);
+      expect(savedEntry.metadata.commentsActivity.lastCommentCreatedAt).toBe(
+        '2026-05-12T12:00:00.000Z',
+      );
+      expect(savedEntry.metadata.commentsActivity.sampleSize).toBe(5);
     });
   });
 
