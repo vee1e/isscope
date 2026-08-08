@@ -229,6 +229,45 @@ describe('GitHub API Client', () => {
       expect(comments[0].body).toBe('First comment');
     });
 
+    it('fetchIssueComments paginates past the first 100 comments', async () => {
+      const page1 = Array.from({ length: 100 }, (_, i) => ({
+        id: i + 1,
+        user: { login: 'u' },
+        body: `comment ${i + 1}`,
+        created_at: '2026-05-18T10:00:00Z',
+        updated_at: '2026-05-18T10:00:00Z',
+      }));
+      const page2 = Array.from({ length: 100 }, (_, i) => ({
+        id: i + 101,
+        user: { login: 'u' },
+        body: `comment ${i + 101}`,
+        created_at: '2026-05-18T10:00:00Z',
+        updated_at: '2026-05-18T10:00:00Z',
+      }));
+      const page3 = Array.from({ length: 50 }, (_, i) => ({
+        id: i + 201,
+        user: { login: 'u' },
+        body: `comment ${i + 201}`,
+        created_at: '2026-05-18T10:00:00Z',
+        updated_at: '2026-05-18T10:00:00Z',
+      }));
+
+      mockFetch
+        .mockResolvedValueOnce(createMockResponse(200, page1))
+        .mockResolvedValueOnce(createMockResponse(200, page2))
+        .mockResolvedValueOnce(createMockResponse(200, page3));
+
+      const comments = await fetchIssueComments('owner', 'repo', 42);
+
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(mockFetch.mock.calls[0][0]).toContain('page=1');
+      expect(mockFetch.mock.calls[1][0]).toContain('page=2');
+      expect(mockFetch.mock.calls[2][0]).toContain('page=3');
+      expect(comments).toHaveLength(250);
+      expect(comments[0].id).toBe(1);
+      expect(comments[249].id).toBe(250);
+    });
+
     it('fetchIssueTimeline requests correct URL and maps events', async () => {
       mockFetch.mockResolvedValue(
         createMockResponse(200, [
