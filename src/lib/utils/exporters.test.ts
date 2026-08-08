@@ -97,6 +97,37 @@ describe('exporters utilities', () => {
       expect(markdown).toContain(`# Isscope Report — ${mockRepo}`);
       expect(markdown).toContain('Total issues analyzed: 0');
     });
+
+    it('escapes pipes and newlines in issue titles so tables and headings stay intact', () => {
+      const trickyIssue: RankedIssue = {
+        number: 99,
+        title: 'Bug | Critical\nfeat: second line',
+        body: null,
+        user: { login: 'u', avatar_url: '', html_url: '' },
+        labels: [],
+        assignees: [],
+        comments_count: 0,
+        created_at: '2026-05-18T10:00:00Z',
+        updated_at: '2026-05-18T10:00:00Z',
+        html_url: 'https://github.com/owner/repo/issues/99',
+        state: 'open',
+        score: 60,
+        analysis: undefined,
+      };
+
+      const markdown = exportToMarkdown([trickyIssue], mockRepo);
+
+      // Table row must keep exactly 6 columns: the pipe is escaped
+      const row = '| 1 | #99 | Bug \\| Critical feat: second line | 60/100 | — | — |';
+      expect(markdown).toContain(row);
+      expect(markdown).toContain('## #99 — Bug | Critical feat: second line');
+
+      // The title's embedded newline must not spawn a second table row
+      const tableSection = markdown.split('## Summary Table')[1].split('---')[0];
+      const dataRows = tableSection.split('\n').filter((l) => l.startsWith('| 1 |'));
+      expect(dataRows).toHaveLength(1);
+      expect(tableSection).not.toContain('\n| feat:');
+    });
   });
 
   describe('downloadMarkdown', () => {
