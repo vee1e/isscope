@@ -123,7 +123,7 @@ describe('exporters utilities', () => {
       expect(markdown).toContain('## #99 — Bug | Critical feat: second line');
 
       // The title's embedded newline must not spawn a second table row
-      const tableSection = markdown.split('## Summary Table')[1].split('---')[0];
+      const tableSection = markdown.split('## Summary Table')[1].split('\n---\n')[0];
       const dataRows = tableSection.split('\n').filter((l) => l.startsWith('| 1 |'));
       expect(dataRows).toHaveLength(1);
       expect(tableSection).not.toContain('\n| feat:');
