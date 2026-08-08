@@ -1,6 +1,19 @@
 import type { RankedIssue } from '../types';
 import { statusLabel, complexityLabel, friendlinessLabel, progressLabel } from './formatters';
 
+// GitHub issue titles may contain pipe characters or line breaks; both break
+// markdown tables/headings, so normalize before embedding user content.
+function escapeTableCell(str: string): string {
+  return str
+    .replace(/\|/g, '\\|')
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
+}
+
+function escapeHeading(str: string): string {
+  return str.replace(/[\r\n]+/g, ' ').trim();
+}
+
 export function exportToMarkdown(issues: RankedIssue[], repoName: string): string {
   const lines: string[] = [
     `# Isscope Report — ${repoName}`,
@@ -19,7 +32,7 @@ export function exportToMarkdown(issues: RankedIssue[], repoName: string): strin
   issues.forEach((issue, i) => {
     const analysis = issue.analysis;
     lines.push(
-      `| ${i + 1} | #${issue.number} | ${issue.title.slice(0, 50)} | ${issue.score}/100 | ${analysis ? statusLabel(analysis.status) : '—'} | ${analysis ? complexityLabel(analysis.complexity) : '—'} |`,
+      `| ${i + 1} | #${issue.number} | ${escapeTableCell(issue.title).slice(0, 50)} | ${issue.score}/100 | ${analysis ? statusLabel(analysis.status) : '—'} | ${analysis ? complexityLabel(analysis.complexity) : '—'} |`,
     );
   });
 
@@ -28,7 +41,7 @@ export function exportToMarkdown(issues: RankedIssue[], repoName: string): strin
   for (const issue of issues) {
     const a = issue.analysis;
     lines.push(
-      `## #${issue.number} — ${issue.title}`,
+      `## #${issue.number} — ${escapeHeading(issue.title)}`,
       ``,
       `- **Doability Score**: ${issue.score}/100`,
       `- **URL**: ${issue.html_url}`,
