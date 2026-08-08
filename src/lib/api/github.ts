@@ -33,6 +33,10 @@ const rateLimitInfo: RateLimitInfo = {
   reset: 0,
 };
 
+// GitHub's search API only returns the first 1000 results regardless of
+// total_count; requests beyond page 10 (at per_page=100) return empty pages.
+const MAX_SEARCH_RESULTS = 1000;
+
 import { useAppStore } from '../../store/appStore';
 
 function headers(): HeadersInit {
@@ -137,21 +141,19 @@ export async function searchIssues(
 
     const issues = data.items
       .filter((item) => !item.pull_request)
-      .map(
-        (item): Issue => ({
-          number: item.number,
-          title: item.title,
-          body: item.body,
-          user: item.user,
-          labels: item.labels,
-          assignees: item.assignees,
-          comments_count: item.comments,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          html_url: item.html_url,
-          state: item.state,
-        }),
-      );
+      .map((item): Issue => ({
+        number: item.number,
+        title: item.title,
+        body: item.body,
+        user: item.user,
+        labels: item.labels,
+        assignees: item.assignees,
+        comments_count: item.comments,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        html_url: item.html_url,
+        state: item.state,
+      }));
 
     allIssues.push(...issues);
 
@@ -163,7 +165,8 @@ export async function searchIssues(
     );
 
     hasMore =
-      allIssues.length < data.total_count && issues.length > 0 && allIssues.length < maxIssues;
+      page * CONFIG.DEFAULT_PAGE_SIZE < Math.min(data.total_count, MAX_SEARCH_RESULTS) &&
+      allIssues.length < maxIssues;
 
     page++;
   }
@@ -190,15 +193,13 @@ export async function fetchIssueComments(
 
   const data = await response.json();
 
-  return data.map(
-    (c: Record<string, unknown>): Comment => ({
-      id: c.id as number,
-      user: c.user as Comment['user'],
-      body: c.body as string,
-      created_at: c.created_at as string,
-      updated_at: c.updated_at as string,
-    }),
-  );
+  return data.map((c: Record<string, unknown>): Comment => ({
+    id: c.id as number,
+    user: c.user as Comment['user'],
+    body: c.body as string,
+    created_at: c.created_at as string,
+    updated_at: c.updated_at as string,
+  }));
 }
 
 export async function fetchIssueTimeline(
@@ -217,16 +218,14 @@ export async function fetchIssueTimeline(
 
     const data: Record<string, unknown>[] = await response.json();
 
-    return data.map(
-      (e): TimelineEvent => ({
-        event: e.event as string,
-        created_at: e.created_at as string,
-        actor: e.actor as TimelineEvent['actor'],
-        source: e.source as TimelineEvent['source'],
-        commit_id: e.commit_id as string | undefined,
-        label: e.label as TimelineEvent['label'],
-      }),
-    );
+    return data.map((e): TimelineEvent => ({
+      event: e.event as string,
+      created_at: e.created_at as string,
+      actor: e.actor as TimelineEvent['actor'],
+      source: e.source as TimelineEvent['source'],
+      commit_id: e.commit_id as string | undefined,
+      label: e.label as TimelineEvent['label'],
+    }));
   } catch {
     return [];
   }
